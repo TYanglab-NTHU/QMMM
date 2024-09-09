@@ -408,13 +408,25 @@ def atom_dist(at1, at2):
 def con_unit(mymol, at1, at2, at3):
   # Use the number of neighbours to estimate the hybridization state
   # Each atom shukd have less then 4 direct neighbours
-  if len(at1.neighbours)>3 or len(at1.neighbours)<1: return(0)  # not a candidate
-  if len(at2.neighbours)>3 or len(at2.neighbours)<1: return(0)  # not a candidate
-  if len(at3.neighbours)>3 or len(at3.neighbours)<1: return(0)  # not a candidate
+  # if len(at1.neighbours)>3 or len(at1.neighbours)<1: return(0)  # not a candidate
+  # if len(at2.neighbours)>3 or len(at2.neighbours)<1: return(0)  # not a candidate
+  # if len(at3.neighbours)>3 or len(at3.neighbours)<1: return(0)  # not a candidate
+  # I try to read the OpenBabel hybridization information 
+  # 1 for sp, 2 for sp2, 3 for sp3, 4 for sq. planar, 5 for trig. bipy, 6 for octahedral
+  # https://openbabel.org/api/3.0/classOpenBabel_1_1OBAtom.shtml
+  obatom=obmol.GetAtom(at1.index+1)
+  if obatom.GetHyb() not in [1, 2]: return(0)
+  if obatom.GetAtomicNum() == 1: return(0)
+  obatom=obmol.GetAtom(at2.index+1)
+  if obatom.GetHyb() not in [1, 2]: return(0)
+  if obatom.GetAtomicNum() == 1: return(0)
+  obatom=obmol.GetAtom(at3.index+1)
+  if obatom.GetHyb() not in [1, 2]: return(0)
+  if obatom.GetAtomicNum() == 1: return(0)
   # conjugated chains can start or end at an aromatic rind, but should not be
   # part of an aromatic ring
   obatom=obmol.GetAtom(at2.index+1)
-  # if obatom.IsAromatic(): return(0)  # not a candidate
+  if obatom.IsAromatic(): return(0)  # not a candidate
   # get the indices of the bonds linking the atoms and check whether the atoms
   # are bonded
   utype = 0 # set default, not a candidate
@@ -986,8 +998,8 @@ shell.append([])    # create shell[9] for conjugated chains
 def check_conjugation(at1):
   triad = []
   for at2 in at1.neighbours:
-    if at2 in qm:
-      continue
+    #if at2 in qm:
+    #  continue
     for at3 in at2.neighbours:
       if at1 == at3:
         continue
@@ -998,20 +1010,27 @@ def check_conjugation(at1):
   return(0, triad)
 
 for at1 in my_clean_list(shell[1]+shell[2]): # Loop over neighbors
-  print(at1)
+  cl1 = 0
+  cl2 = 0
+  trip = []
+  printf("%-2s", at1.atomic_symbol)
+  printf("  %i", len(at1.rings))
   if len(at1.rings) != 0:
-    if len(at1.rings[0])<11:
-      continue
+    printf("  %i", len(at1.rings[0]))
+  else:
+    printf("  -")
+  printf("\n")
   # Test for a conjugated triad
   cl1, trip = check_conjugation(at1)
+  printf("  %2i ", cl1)
+  print(trip)
   if  cl1 != 0:
     shell[9] += trip
     my_clean_list(shell[9])
     qm += trip
     my_clean_list(qm)
-    printf("  %2i ", cl1)
-    print(trip)
     while bool(True):
+      print("Hallo")
       cl2, trip = check_conjugation(trip[2])
       printf("  %2i ", cl2)
       print(trip)
@@ -1020,10 +1039,9 @@ for at1 in my_clean_list(shell[1]+shell[2]): # Loop over neighbors
         my_clean_list(shell[9])
         qm += trip
         my_clean_list(qm)
-      if cl1 != cl2: break
+      else: break
 
-print()
-
+summarize_step(stp_cnt, shell[9], qm, "conjugated chains")
 
 exit()
 
