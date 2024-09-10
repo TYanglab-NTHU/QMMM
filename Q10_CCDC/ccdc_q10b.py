@@ -87,6 +87,9 @@
 # - Grow conjugated chains
 # 07.09.24
 # - Finish conjugated chain growth
+# 10.09.24
+# - Growth of conjugated chains finished
+#   Next: Marry the chain code with the detection of rings
 
 # Load modules for Python coding
 import sys                      # IO Basics
@@ -387,6 +390,21 @@ def atom_dist(at1, at2):
 
 ################################################################################
 # functions to make it easier with the API                                     #
+# create a string to label a triad of atoms                                    #
+# input  trip a list of 3 atoms (no sanity control)                            #
+# output mstr string with the label for the triad                              #
+################################################################################
+
+def triad_string(trip):
+  mstr  = "%s%i" % (trip[0].atomic_symbol, trip[0].index)
+  mstr += "-"
+  mstr += "%s%i" % (trip[1].atomic_symbol, trip[1].index)
+  mstr += "-"
+  mstr += "%s%i" % (trip[2].atomic_symbol, trip[2].index)
+  return(mstr)
+
+################################################################################
+# functions to make it easier with the API                                     #
 # can theese tree atoms be a unit of conjugated chain?                         #
 # this code is looking only for standard 2nd row bond types                    #
 # A doublebond folled by a single bond is not enough to detect a unit, because #
@@ -406,23 +424,34 @@ def atom_dist(at1, at2):
 ################################################################################
 
 def con_unit(mymol, at1, at2, at3):
-  # Use the number of neighbours to estimate the hybridization state
-  # Each atom shukd have less then 4 direct neighbours
-  # if len(at1.neighbours)>3 or len(at1.neighbours)<1: return(0)  # not a candidate
-  # if len(at2.neighbours)>3 or len(at2.neighbours)<1: return(0)  # not a candidate
-  # if len(at3.neighbours)>3 or len(at3.neighbours)<1: return(0)  # not a candidate
-  # I try to read the OpenBabel hybridization information 
-  # 1 for sp, 2 for sp2, 3 for sp3, 4 for sq. planar, 5 for trig. bipy, 6 for octahedral
-  # https://openbabel.org/api/3.0/classOpenBabel_1_1OBAtom.shtml
-  obatom=obmol.GetAtom(at1.index+1)
-  if obatom.GetHyb() not in [1, 2]: return(0)
-  if obatom.GetAtomicNum() == 1: return(0)
-  obatom=obmol.GetAtom(at2.index+1)
-  if obatom.GetHyb() not in [1, 2]: return(0)
-  if obatom.GetAtomicNum() == 1: return(0)
-  obatom=obmol.GetAtom(at3.index+1)
-  if obatom.GetHyb() not in [1, 2]: return(0)
-  if obatom.GetAtomicNum() == 1: return(0)
+  # No H atoms allowed
+  if 1 in [at1.atomic_number, at2.atomic_number, at3.atomic_number]:
+    # print("No H atoms allowd")
+    return(0)
+  printf("Testing triad %s\n", triad_string([at1, at2, at3]))
+  if bool(True):
+    # Use the number of neighbours to estimate the hybridization state
+    # Each atom shukd have less then 4 direct neighbours
+    if len(at1.neighbours)>3 or len(at1.neighbours)<1: return(0)  # not a candidate
+    if len(at2.neighbours)>3 or len(at2.neighbours)<1: return(0)  # not a candidate
+    if len(at3.neighbours)>3 or len(at3.neighbours)<1: return(0)  # not a candidate
+  else:
+    # I try to read the OpenBabel hybridization information 
+    # 1 for sp, 2 for sp2, 3 for sp3, 4 for sq. planar, 5 for trig. bipy, 6 for octahedral
+    # https://openbabel.org/api/3.0/classOpenBabel_1_1OBAtom.shtml
+    printf("  Hyb")
+    obatom=obmol.GetAtom(at1.index+1)
+    printf("  %i", obatom.GetHyb())
+    if obatom.GetHyb() not in [1, 2]:
+      return(0)
+    obatom=obmol.GetAtom(at2.index+1)
+    printf("  %i", obatom.GetHyb())
+    if obatom.GetHyb() not in [1, 2]:
+      return(0)
+    obatom=obmol.GetAtom(at3.index+1)
+    printf("  %i\n", obatom.GetHyb())
+    if obatom.GetHyb() not in [1, 2]:
+      return(0)
   # conjugated chains can start or end at an aromatic rind, but should not be
   # part of an aromatic ring
   obatom=obmol.GetAtom(at2.index+1)
@@ -453,6 +482,32 @@ def con_unit(mymol, at1, at2, at3):
   if mymol.bonds[ind1].bond_type == 1 and mymol.bonds[ind2].bond_type == 2:
     return(2)
   return(utype)
+
+################################################################################
+# functions to make it easier with the API                                     #
+# test wether a conjugated 3-atom unit starts at the given atom                #
+# The search does not detct all possible units. The serach stops after the one #
+# valid unit has been found.                                                   #
+# input  at1        1st atom (CDC atoms type) of the triad                     #
+# output con_level  integer descibing the bond pattern of the unit             #
+#        triad      list with the 3 atoms of the conjugated unit               #
+################################################################################
+
+def check_conjugation(at1):
+  triad = []
+  for at2 in at1.neighbours:
+    #if at2 in qm:
+    #  continue
+    for at3 in at2.neighbours:
+      if at3 in qm:
+        continue
+      if at1 == at3:
+        continue
+      con_level = con_unit(mol, at1, at2, at3)
+      if con_level != 0:
+        triad += [at1, at2, at3]
+        return(con_level, triad)
+  return(0, triad)
 
 ################################################################################
 # functions to for the compartimensatiom of the  QM/MM separation              #
@@ -995,52 +1050,27 @@ list_xyz(combi, fname, comment)
 qm_cnt += 1
 shell.append([])    # create shell[9] for conjugated chains
 
-def check_conjugation(at1):
-  triad = []
-  for at2 in at1.neighbours:
-    #if at2 in qm:
-    #  continue
-    for at3 in at2.neighbours:
-      if at1 == at3:
-        continue
-      con_level = con_unit(mol, at1, at2, at3)
-      if con_level != 0:
-        triad += [at1, at2, at3]
-        return(con_level, triad)
-  return(0, triad)
+# I change my approach. Instead looking for chains I spread out unit
+# per unit testing every quantum atom.
 
-for at1 in my_clean_list(shell[1]+shell[2]): # Loop over neighbors
+while bool(True):
   cl1 = 0
-  cl2 = 0
   trip = []
-  printf("%-2s", at1.atomic_symbol)
-  printf("  %i", len(at1.rings))
-  if len(at1.rings) != 0:
-    printf("  %i", len(at1.rings[0]))
-  else:
-    printf("  -")
-  printf("\n")
-  # Test for a conjugated triad
-  cl1, trip = check_conjugation(at1)
-  printf("  %2i ", cl1)
-  print(trip)
-  if  cl1 != 0:
-    shell[9] += trip
-    my_clean_list(shell[9])
-    qm += trip
-    my_clean_list(qm)
-    while bool(True):
-      print("Hallo")
-      cl2, trip = check_conjugation(trip[2])
-      printf("  %2i ", cl2)
-      print(trip)
-      if cl1==cl2:
-        shell[9] += trip
-        my_clean_list(shell[9])
-        qm += trip
-        my_clean_list(qm)
-      else: break
-
+  gotcha = 0
+  for at1 in my_clean_list(qm): # Loop over all QM atoms
+    printf("Testing %s-%i\n", at1.atomic_symbol, at1.index)
+    cl1, trip = check_conjugation(at1)
+    if cl1 != 0:
+      printf("  %-10s  %2i\n", triad_string(trip), cl1)
+      for nat in trip:
+        if nat not in qm:
+          gotcha = 1
+          shell[9].append(nat)
+  shell[9] = my_clean_list(shell[9])
+  qm += shell[9]
+  qm = my_clean_list(qm)
+  if gotcha == 0:
+    break
 summarize_step(stp_cnt, shell[9], qm, "conjugated chains")
 
 exit()
