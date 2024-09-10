@@ -1,0 +1,164 @@
+Summarize command line parameter
+  VerboseFlag = 2
+  Input File  = ../TestStructures/ring_growth.xyz
+my_arg in globals
+my_arglist in globals
+argpos in globals
+argcnt in globals
+4 global variables deleted
+Clean up old files
+ext   .xyz
+path  ../TestStructures/
+base  ring_growth
+Process input file ../TestStructures/ring_growth.xyz
+  process xyz input file (depreciated)
+  ../TestStructures/ring_growth.mol2 (easier to use file format) found
+  process mol2 input file (preferred)
+  read input file directly into a CSD object
+  standarize bonds
+  build supplementary OpenBabel object from mol2 file
+  compare the molecular geometries of both objects
+  Number of atoms: CSD 47   OB 47
+    the number of atoms 47 in both objects match
+    compare geometries line by line ...
+      0    6    6    0.000000    0.000000    0.000000
+      1    6    6    0.000000    0.000000    0.000000
+      2    6    6    0.000000    0.000000    0.000000
+      3    6    6    0.000000    0.000000    0.000000
+      4    6    6    0.000000    0.000000    0.000000
+      5    6    6    0.000000    0.000000    0.000000
+      6    6    6    0.000000    0.000000    0.000000
+      7    6    6    0.000000    0.000000    0.000000
+      8    6    6    0.000000    0.000000    0.000000
+      9    6    6    0.000000    0.000000    0.000000
+     10    1    1    0.000000    0.000000    0.000000
+     11    6    6    0.000000    0.000000    0.000000
+     12    6    6    0.000000    0.000000    0.000000
+     13    6    6    0.000000    0.000000    0.000000
+     14    1    1    0.000000    0.000000    0.000000
+     15    1    1    0.000000    0.000000    0.000000
+     16    6    6    0.000000    0.000000    0.000000
+     17    6    6    0.000000    0.000000    0.000000
+     18    6    6    0.000000    0.000000    0.000000
+     19    1    1    0.000000    0.000000    0.000000
+     20    6    6    0.000000    0.000000    0.000000
+     21    6    6    0.000000    0.000000    0.000000
+     22    1    1    0.000000    0.000000    0.000000
+     23    6    6    0.000000    0.000000    0.000000
+     24    1    1    0.000000    0.000000    0.000000
+     25    6    6    0.000000    0.000000    0.000000
+     26    1    1    0.000000    0.000000    0.000000
+     27    1    1    0.000000    0.000000    0.000000
+     28    6    6    0.000000    0.000000    0.000000
+     29    6    6    0.000000    0.000000    0.000000
+     30    1    1    0.000000    0.000000    0.000000
+     31    6    6    0.000000    0.000000    0.000000
+     32    1    1    0.000000    0.000000    0.000000
+     33    6    6    0.000000    0.000000    0.000000
+     34    1    1    0.000000    0.000000    0.000000
+     35    1    1    0.000000    0.000000    0.000000
+     36    6    6    0.000000    0.000000    0.000000
+     37    6    6    0.000000    0.000000    0.000000
+     38    1    1    0.000000    0.000000    0.000000
+     39    6    6    0.000000    0.000000    0.000000
+     40    1    1    0.000000    0.000000    0.000000
+     41    6    6    0.000000    0.000000    0.000000
+     42    1    1    0.000000    0.000000    0.000000
+     43    1    1    0.000000    0.000000    0.000000
+     44    7    7    0.000000    0.000000    0.000000
+     45    7    7    0.000000    0.000000    0.000000
+     46   26   26    0.000000    0.000000    0.000000
+    the geometries of both objects match
+root in globals
+file in globals
+path in globals
+base in globals
+ext in globals
+5 global variables deleted
+obatom in globals
+1 global variables deleted
+csdanz in globals
+obanz in globals
+csdnum in globals
+obnum in globals
+4 global variables deleted
+csdX in globals
+obX in globals
+deltaX in globals
+csdY in globals
+obY in globals
+deltaY in globals
+csdZ in globals
+obZ in globals
+deltaZ in globals
+9 global variables deleted
+Search for functional groups
+  No C#N group(s) found.
+  No ccccccC#N group(s) found.
+  No cCl group(s) found.
+  No N#N group(s) found.
+  No [Fe][N] group(s) found.
+  No [Fe][O] group(s) found.
+  0 functional group(s) found.
+Start the actual QM/MM partioning process
+Step 01 - metal center
+  1 new atoms found
+   46  Fe   -3.935900    0.351900    0.000000
+  Write stp01.xyz
+Step 02 - direct neighbours
+  0 new atoms found
+  Write stp02.xyz
+Step 3 - Distant neighbour search
+  <= 3.0 A and <= 80% of the VdW radius
+  Fe46-N44  2.6579  2.8400  Passed
+  Fe46-N45  2.6602  2.8400  Passed
+Step 03 - distance based neighbours
+  2 new atoms found
+   44   N   -1.752900    1.868100    0.000000
+   45   N   -2.048700   -1.523000    0.000000
+  Write stp03.xyz
+Step 04 - rings containing neighbours atoms
+    atom  smallest ring
+    N-44  2
+    N-45  2
+Step 04 - rings containing neighbours atoms
+  2 new atoms found
+    1   C   -0.692700    0.876200    0.000000
+    5   C   -0.824100   -0.721100    0.000000
+  Write stp04.xyz
+Step 05 - central aromatic rings
+  10 new atoms found
+    0   C   -1.610400    3.142500    0.000000
+    2   C    0.595800    1.418700    0.000000
+    3   C    0.765300    2.821200    0.000000
+    4   C   -0.314400    3.657000    0.000000
+    6   C    1.720200    0.583800    0.000000
+    7   C    1.589300   -0.814100    0.000000
+    8   C    0.330400   -1.439900    0.000000
+   16   C    0.254800   -2.982800    0.000000
+   17   C   -0.996500   -3.616500    0.000000
+   18   C   -2.158900   -2.851400    0.000000
+  Write stp05.xyz
+Step 06 - iterative search for aromatic rings
+   24 atoms found in step  1
+    8 atoms found in step  2
+  2 iterative search rounds needed
+Step 06 - iterative search for aromatic rings
+  16 new atoms found
+    9   C    2.743800   -1.607400    0.000000
+   11   C    3.968100   -1.026200    0.000000
+   12   C    4.100700    0.365400    0.000000
+   13   C    2.999400    1.156100    0.000000
+   20   C   -1.118300   -5.141600    0.000000
+   21   C   -2.396000   -5.708900    0.000000
+   23   C   -3.534800   -4.881000    0.000000
+   25   C   -3.418500   -3.474300    0.000000
+   28   C    5.235500   -1.884600    0.000000
+   29   C    6.478200   -1.247000    0.000000
+   31   C    6.547900    0.157200    0.000000
+   33   C    5.380400    0.948900    0.000000
+   36   C   -0.133800    5.176800    0.000000
+   37   C   -1.273700    5.987000    0.000000
+   39   C   -2.554900    5.403300    0.000000
+   41   C   -2.721300    4.002200    0.000000
+  Write stp06.xyz
