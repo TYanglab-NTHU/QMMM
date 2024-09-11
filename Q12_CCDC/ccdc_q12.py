@@ -90,12 +90,56 @@
 # 10.09.24
 # - Growth of conjugated chains finished
 #   Next: Marry the chain code with the detection of rings
+# - Move to ccdc_q11.py
+#   To marry the search for conjugated chains with th iterative
+#   search for aromatic rings, I have to do major changes to
+#   the base structure of the code.
+#   ATTENTION: The directory entry has to be last action of a step.
+#     stp 01 -> cent,    shell[0]  metal center
+#     stp 02 -> close,   shell[1]  close neighbors
+#     stp 03 -> dist,    shell[2]  distant neighbors
+#     stp 04 -> nrings,  shell[3]  rings with neighboring atoms
+#     stp 05 -> cArings, shell[4]  central aromatic rings
+#     stp 06 -> gArings, shell[5]  central aromatic rings
+# - Screw up in the output from step 06 fixed. The search results
+#   were oK and did needed to be changed.
+# 10.09.24
+# - Continue with the work on the dictionary
+#     stp 07 -> aLink,   shell[6]  1 atom bridges
+#     stp 08 -> aaLink,  shell[7]  2 atom bridges
+#     stp 09 -> hatom,   shell[8]  H atoms attached to the QM core
+# - Transformation of shells[0] to shell[8] finished and double
+#   checked using <grep -n "shell\[8\]" ccdc_q11.py>
+# - Make the serach for conjugated units movable
+#   The conjugated atoms were collected in the old shell[9]
+#     stp xx -> conju,   shell[9]  atoms in conjugated chains
+# - Move to ccdc_q12.py
+#   To make the individual search steps movable, I want to turn
+#   them into functions. This also helps with the scope of the
+#   variables. The functions will return a list with the new atoms.
+#   The functions will probe the necessary global variables so that
+#   they don't need to be passed to the function. [But it might be
+#   the cleaner way to go.]
+#   * conjugated chains done
+#   * lone H atoms done
+#   * 2-atom links
+#   * 1-atom links
+#   * grow of aromatic rings done
+#   * inner aromatic rings done
+#   * neighboring rings done
+#   * distant neighbors done
+#   * close neighbors done
+#   * metal center done
+# - It looks like moving the search blocks into individual functions
+#   removed the need for the shell list. I will delete it from the
+#   code and use the dictionary dnts instead.
+#   The code doesn't crash after I removed the shell list.
 
 # Load modules for Python coding
 import sys                      # IO Basics
 import glob                     # wild cards in file names
 import os                       # access file system
-import subprocess               # call the shell
+# import subprocess               # call the shell
 import math                     # mathematical  functions
 
 # Load modules and prepare to read the CCS data base
@@ -124,7 +168,7 @@ stp_cnt  = 0  # general step counter
 # initialize main lists
 qm    = [] # list with QM atoms
 mm    = [] # list with MM atoms
-shell = [] # direct neighbours, shells need to be initialized carefully
+dnts  = {} # Dictionary to look up shells by name (Name To Shell)
 
 # lists with intermediate results
 # the Z indicates lists with intermediate results
@@ -382,9 +426,9 @@ def my_equal_rings(ring01, ring02):
 
 def atom_dist(at1, at2):
   dist = 0.0
-  dist += (a1.coordinates.x-a2.coordinates.x)**2
-  dist += (a1.coordinates.y-a2.coordinates.y)**2
-  dist += (a1.coordinates.z-a2.coordinates.z)**2
+  dist += (at1.coordinates.x-at2.coordinates.x)**2
+  dist += (at1.coordinates.y-at2.coordinates.y)**2
+  dist += (at1.coordinates.z-at2.coordinates.z)**2
   dist = math.sqrt(dist)
   return(dist)
 
@@ -404,7 +448,7 @@ def triad_string(trip):
   return(mstr)
 
 ################################################################################
-# functions to make it easier with the API                                     #
+# functions to to help with the QM/MM separation                               #
 # can theese tree atoms be a unit of conjugated chain?                         #
 # this code is looking only for standard 2nd row bond types                    #
 # A doublebond folled by a single bond is not enough to detect a unit, because #
@@ -484,7 +528,7 @@ def con_unit(mymol, at1, at2, at3):
   return(utype)
 
 ################################################################################
-# functions to make it easier with the API                                     #
+# functions to to help with the QM/MM separation                               #
 # test wether a conjugated 3-atom unit starts at the given atom                #
 # The search does not detct all possible units. The serach stops after the one #
 # valid unit has been found.                                                   #
@@ -510,7 +554,403 @@ def check_conjugation(at1):
   return(0, triad)
 
 ################################################################################
-# functions to for the compartimensatiom of the  QM/MM separation              #
+# functions to to help with the QM/MM separation                               #
+# find chains of conjugated 3-atom units                                       #
+# input   none                                                                 #
+# output  new_atoms    new atoms found and added to the QM core                #
+# globals VerboseFlag  int to controll the verbosity of the output             #
+#         qm           list with all atoms in the quantum core                 #
+################################################################################
+
+def conjugated_chains():
+  new_atoms = []
+  # are the necessary global variables defined?
+  gvar_list = ["qm", "VerboseFlag"]
+  for gvar in gvar_list:
+    if gvar not in globals():
+      printf("Variable %s NOT in globals.\n", gvar)
+      exit()
+    elif VerboseFlag==2: printf("Variable %s in globals.\n", gvar)
+  global qm
+  # actual search
+  while bool(True): # infinite loop to detect chains of units
+    cl1 = 0
+    trip = []
+    gotcha = 0
+    for at1 in my_clean_list(qm): # Loop over all QM atoms
+      if VerboseFlag==2:
+        printf("Testing %s-%i\n", at1.atomic_symbol, at1.index)
+      cl1, trip = check_conjugation(at1)
+      if cl1 != 0:
+        printf("  %-10s  %2i\n", triad_string(trip), cl1)
+        for nat in trip:
+          if nat not in qm:
+            gotcha = 1
+            new_atoms.append(nat)
+    new_atoms = my_clean_list(new_atoms)
+    qm += new_atoms
+    qm = my_clean_list(qm)
+    if gotcha == 0:
+      break
+  return(new_atoms)
+
+################################################################################
+# functions to to help with the QM/MM separation                               #
+# find H atoms attached to the QM core                                         #
+# input   none                                                                 #
+# output  new_atoms    new atoms found and added to the QM core                #
+# globals VerboseFlag  int to controll the verbosity of the output             #
+#         qm           list with all atoms in the quantum core                 #
+################################################################################
+
+def lone_H_atoms():
+  new_atoms = []
+  # are the necessary global variables defined?
+  gvar_list = ["qm", "VerboseFlag"]
+  for gvar in gvar_list:
+    if gvar not in globals():
+      printf("Variable %s NOT in globals.\n", gvar)
+      exit()
+    elif VerboseFlag==2: printf("Variable %s in globals.\n", gvar)
+  global qm
+  # the actual search
+  for at in qm:
+    for na in at.neighbours:
+      if na.atomic_number == 1 and na not in qm:
+        new_atoms.append(na)
+  new_atoms = my_clean_list(new_atoms)
+  qm += new_atoms
+  qm = my_clean_list(qm)
+  return(new_atoms)
+
+################################################################################
+# functions to to help with the QM/MM separation                               #
+# find two atom bridges                                                        #
+# input   none                                                                 #
+# output  new_atoms    new atoms found and added to the QM core                #
+# globals VerboseFlag  int to controll the verbosity of the output             #
+#         qm           list with all atoms in the quantum core                 #
+################################################################################
+
+def two_atom_links():
+  new_atoms = []
+  # are the necessary global variables defined?
+  gvar_list = ["qm", "VerboseFlag"]
+  for gvar in gvar_list:
+    if gvar not in globals():
+      printf("Variable %s NOT in globals.\n", gvar)
+      exit()
+    elif VerboseFlag==2: printf("Variable %s in globals.\n", gvar)
+  global qm
+  # the actual search
+  if VerboseFlag == 2:
+    printf("List of all found 2-atom links\n")
+  for b0 in qm:
+    for b1 in b0.neighbours:
+      for b2 in b1.neighbours:
+        for b3 in b2.neighbours:
+          if VerboseFlag == 2:
+            printf("  %s%i-", b0.atomic_symbol, b0.index)
+            printf("%s%i-",   b1.atomic_symbol, b1.index)
+            printf("%s%i-",   b2.atomic_symbol, b2.index)
+            printf("%s%i  ",  b3.atomic_symbol, b3.index)
+            if (b1 not in qm and b2 not in qm and b3 in qm):
+              printf("Add\n")
+            else:
+              printf("Del\n")
+          if (b1 not in qm and b2 not in qm and b3 in qm):
+            new_atoms.append(b1)
+            new_atoms.append(b2)
+  new_atoms = my_clean_list(new_atoms)
+  qm += new_atoms
+  qm = my_clean_list(qm)
+  return(new_atoms)
+
+################################################################################
+# functions to to help with the QM/MM separation                               #
+# find one atom bridges                                                        #
+# input   none                                                                 #
+# output  new_atoms    new atoms found and added to the QM core                #
+# globals VerboseFlag  int to controll the verbosity of the output             #
+#         qm           list with all atoms in the quantum core                 #
+################################################################################
+
+def one_atom_links():
+  new_atoms = []
+  # are the necessary global variables defined?
+  gvar_list = ["qm", "VerboseFlag"]
+  for gvar in gvar_list:
+    if gvar not in globals():
+      printf("Variable %s NOT in globals.\n", gvar)
+      exit()
+    elif VerboseFlag==2: printf("Variable %s in globals.\n", gvar)
+  global qm
+  # the actual search
+  if VerboseFlag == 2:
+    printf("List of all found 1-atom links\n")
+  for sa in qm:
+    for ea in qm:
+      if sa.index == ea.index:
+        continue
+      for la in sa.neighbours:
+        if la in ea.neighbours and la not in qm:
+          new_atoms.append(la)
+          if VerboseFlag == 2:
+            printf("  %s%i-", sa.atomic_symbol, sa.index)
+            printf("%s%i-", la.atomic_symbol, la.index)
+            printf("%s%i\n", ea.atomic_symbol, ea.index)
+  new_atoms = my_clean_list(new_atoms)
+  qm += new_atoms
+  qm = my_clean_list(qm)
+  return(new_atoms)
+
+################################################################################
+# functions to to help with the QM/MM separation                               #
+# outward growth of aromatic rings                                             #
+# input   none                                                                 #
+# output  new_atoms    new atoms found and added to the QM core                #
+# globals VerboseFlag  int to controll the verbosity of the output             #
+#         qm           list with all atoms in the quantum core                 #
+#         dnts         dictionary holding intermediate results                 #
+################################################################################
+
+def grow_aromatic_rings():
+  # are the necessary global variables defined?
+  gvar_list = ["qm", "dnts", "VerboseFlag"]
+  for gvar in gvar_list:
+    if gvar not in globals():
+      printf("Variable %s NOT in globals.\n", gvar)
+      exit()
+    elif VerboseFlag==2: printf("Variable %s in globals.\n", gvar)
+  global qm, dnts
+  # the actual search
+  new_atoms = []  # empty list for serach results
+  it_cnt = 0      # counter for iterative rounds          
+  # create an intermediate test list for atoms to be tested
+  itl = dnts['close']+dnts['dist']+dnts['nrings']+dnts['cArings']
+  itl = my_clean_list(itl)
+  if VerboseFlag == 2:
+    printf("Details for the iterative search for aromatic rings\n")
+  while bool(True):   # infinite loop for the iterative search
+    new_at = []       # atoms found by each loop of the iterative search
+    it_cnt += 1       # increase counter
+    # check whether the new atoms are part of an aromatic ring and that these atoms
+    # are not in the QM core
+    for at in itl:
+      for ri in at.rings:
+        if ri.is_aromatic:
+          for tat in ri.atoms:
+            if tat not in qm:
+              new_at.append(tat)
+    if len(new_at) == 0:
+      break
+    else:
+      if VerboseFlag == 2:
+        printf("  %3i atoms found in step %2i\n", len(new_at), it_cnt)
+      new_atoms += new_at
+      new_atoms = my_clean_list(new_atoms)
+      itl = my_clean_list(itl + new_atoms)
+      new_at = []
+      qm += new_atoms
+      qm = my_clean_list(qm)
+  if VerboseFlag == 2:
+    printf("  %i iterative search rounds needed\n", it_cnt-1)
+  return(new_atoms)
+
+################################################################################
+# functions to to help with the QM/MM separation                               #
+# detect the inner aromatic rings                                              #
+# input   none                                                                 #
+# output  new_atoms    new atoms found and added to the QM core                #
+# globals VerboseFlag  int to controll the verbosity of the output             #
+#         qm           list with all atoms in the quantum core                 #
+#         dnts         dictionary holding intermediate results                 #
+################################################################################
+
+def inner_aromatic_rings():
+  # are the necessary global variables defined?
+  gvar_list = ["qm", "dnts", "VerboseFlag"]
+  for gvar in gvar_list:
+    if gvar not in globals():
+      printf("Variable %s NOT in globals.\n", gvar)
+      exit()
+    elif VerboseFlag==2: printf("Variable %s in globals.\n", gvar)
+  global qm, dnts
+  # the actual search
+  new_atoms = []  # empty list for serach results
+  # create an intermediate test list for atoms to be tested
+  itl = dnts['close'] + dnts['dist'] + dnts['nrings']
+  itl = my_clean_list(itl)
+  # find new MM aromatic ring atoms
+  for sa in itl:
+    for ri in sa.rings: # test all rings
+      if ri.is_aromatic:
+        for at in ri.atoms: # add all aromatic ring atoms not in qm
+          if at not in qm:
+            new_atoms.append(at)
+  new_atoms = my_clean_list(new_atoms)
+  qm += new_atoms
+  qm = my_clean_list(qm)
+  return(new_atoms)
+
+################################################################################
+# functions to to help with the QM/MM separation                               #
+# find the rings containing neighbors to the metal center                      #
+# input   none                                                                 #
+# output  new_atoms    new atoms found and added to the QM core                #
+# globals VerboseFlag  int to controll the verbosity of the output             #
+#         qm           list with all atoms in the quantum core                 #
+#         dnts         dictionary holding intermediate results                 #
+################################################################################
+
+def neighbor_rings():
+  # are the necessary global variables defined?
+  gvar_list = ["qm", "dnts", "VerboseFlag"]
+  for gvar in gvar_list:
+    if gvar not in globals():
+      printf("Variable %s NOT in globals.\n", gvar)
+      exit()
+    elif VerboseFlag==2: printf("Variable %s in globals.\n", gvar)
+  global qm, dnts
+  # the actual search
+  new_atoms = []  # empty list for serach results
+  # create an intermediate test list for atoms to be tested
+  itl = dnts['close'] + dnts['dist']
+  itl = my_clean_list(itl)
+  if VerboseFlag==2:
+    printf("Rings containing neighbours atoms\n")
+    printf("    atom  smallest ring\n")
+  for ne in itl:
+    if VerboseFlag==2:
+      printf("  %6s", MyLabel(ne))
+      if len(ne.rings)>0:
+        printf("  %i\n", len(ne.rings[0]))
+      else:
+        printf("  -\n")
+    if len(ne.rings)>0 and len(ne.rings[0])<=10 : # Is the atom member of a ring?
+      for at in ne.rings[0].atoms: # focus on the smallest ring
+        if at not in qm:
+          new_atoms.append(at)
+  new_atoms = my_clean_list(new_atoms)
+  qm += new_atoms
+  qm  = my_clean_list(qm)
+  return(new_atoms)
+
+################################################################################
+# functions to to help with the QM/MM separation                               #
+# distant neighbors                                                            #
+# input   max          maximum distance in Angs                                #
+#         fac          scaling factor for the sum of VdW radii                 #
+# output  new_atoms    new atoms found and added to the QM core                #
+# globals VerboseFlag  int to controll the verbosity of the output             #
+#         qm           list with all atoms in the quantum core                 #
+#         dnts         dictionary holding intermediate results                 #
+################################################################################
+
+def distant_neighbors(max, vdw_fac):
+  # are the necessary global variables defined?
+  gvar_list = ["qm", "dnts", "VerboseFlag"]
+  for gvar in gvar_list:
+    if gvar not in globals():
+      printf("Variable %s NOT in globals.\n", gvar)
+      exit()
+    elif VerboseFlag==2: printf("Variable %s in globals.\n", gvar)
+  global qm, dnts
+  # the actual search
+  new_atoms = []  # empty list for serach results
+  bnd_cnt = 0      # counter for new bonds
+  vdw_sum = 0.0    # sum of the VdW radii of a long distance contact
+
+  if VerboseFlag == 2:
+    printf("Distant neighbour search\n")
+    printf("  <= %3.1f A and <= %.0f%% of the VdW radius\n", max, vdw_fac*100)
+  for a1 in dnts['cent']: # loop over all center atoms
+    for a2 in mol.atoms: # loop over all atoms in the molecule
+      if a1 == a2 : continue
+      dist = atom_dist(a1, a2)
+      vdw_sum =  (1.0 * a1.vdw_radius)  # The type of the vdw_property appears to be
+      vdw_sum += (1.0 * a2.vdw_radius)  # context dependent. I force it to a float.
+      vdw_sum *= vdw_fac                # Apply cut-off factor
+      if dist < max and a2 not in qm:
+        if VerboseFlag == 2:
+          printf("  %s%i",    a1.atomic_symbol, a1.index)
+          printf( "-%s%i",    a2.atomic_symbol, a2.index)
+          printf("  %6.4f",   dist)
+          printf("  %6.4f",   vdw_sum)
+          if dist<=vdw_sum: printf("  Passed\n")
+          else: printf("  too long\n")
+        if dist<=vdw_sum:
+          new_atoms.append(a2)
+          # Adding new bonds messes with the CDS assignment of rings. The new 
+          # bonds can create small 3-member rings looping back to the metal 
+          # atoms. To reactivate the option for new bonds change False to True
+          if InMolBonds(mol, a1, a2)==-1 and bool(True):
+            mol.add_bond(1, a1, a2)
+            bnd_cnt += 1
+  new_atoms = my_clean_list(new_atoms)
+  qm += new_atoms
+  qm = my_clean_list(qm)
+
+  return(new_atoms)
+################################################################################
+# functions to to help with the QM/MM separation                               #
+# find close neighbors                                                         #
+# input   none                                                                 #
+# output  new_atoms    new atoms found and added to the QM core                #
+# globals VerboseFlag  int to controll the verbosity of the output             #
+#         qm           list with all atoms in the quantum core                 #
+#         dnts         dictionary holding intermediate results                 #
+################################################################################
+
+def close_neighbors():
+  # are the necessary global variables defined?
+  gvar_list = ["qm", "dnts", "VerboseFlag"]
+  for gvar in gvar_list:
+    if gvar not in globals():
+      printf("Variable %s NOT in globals.\n", gvar)
+      exit()
+    elif VerboseFlag==2: printf("Variable %s in globals.\n", gvar)
+  global qm, dnts
+  # the actual search
+  new_atoms = []  # empty list for serach results
+  for mc in dnts['cent']:
+    for at in mc.neighbours:
+      new_atoms.append(at)
+      qm.append(at)
+  new_atoms = my_clean_list(new_atoms)
+  qm = my_clean_list(qm)
+  return(new_atoms)
+
+################################################################################
+# functions to to help with the QM/MM separation                               #
+# find metal center                                                            #
+# input   at_num       atomic number of the lightest metal atom                #
+# output  new_atoms    new atoms found and added to the QM core                #
+# globals VerboseFlag  int to controll the verbosity of the output             #
+#         qm           list with all atoms in the quantum core                 #
+################################################################################
+
+def metal_center(at_num):
+  # are the necessary global variables defined?
+  gvar_list = ["qm", "VerboseFlag"]
+  for gvar in gvar_list:
+    if gvar not in globals():
+      printf("Variable %s NOT in globals.\n", gvar)
+      exit()
+    elif VerboseFlag==2: printf("Variable %s in globals.\n", gvar)
+  global qm
+  # the actual search
+  new_atoms = []  # empty list for serach results
+  for at in mol.atoms:
+    if at.is_metal and at.atomic_number >= at_num:
+      new_atoms.append(at)
+  new_atoms = my_clean_list(new_atoms)
+  qm += new_atoms
+  qm = my_clean_list(qm)
+  return(new_atoms)
+
+################################################################################
+# functions for the compartimensatiom of the  QM/MM separation                 #
 # this function summarizes an ibdividual step of the search                    #
 #   global var VerboseFlag will be used to controll the output                 #
 # input  cnt step counter                                                      #
@@ -541,10 +981,15 @@ def summarize_step(cnt, nlist, flist, mytxt):
   list_xyz(flist, fname, mytxt)
   return bool(True)
 
+
 ################################################################################
 ################################################################################
 ##                                                                            ##
-## main code of the test                                                      ##
+##       MM   MM   AAAAA   II   NN   N   CCCCC   OOOOO   DDD     EEEE         ##
+##       M M M M   A   A   II   N N  N   C       O   O   D  D    E            ##
+##       M  M  M   AAAAA   II   N  N N   C       O   O   D   D   EEE          ##
+##       M     M   A   A   II   N    N   C       O   O   D  D    E            ##
+##       M     M   A   A   II   N   NN   CCCCC   OOOOO   DDD     EEEE         ##
 ##                                                                            ##
 ################################################################################
 ################################################################################
@@ -778,30 +1223,18 @@ if VerboseFlag > 0:
 ################################################################################
 
 stp_cnt = 1
-shell.append([]) # create shell[0] for central metal atoms
-
-for at in mol.atoms:
-  if at.is_metal and at.atomic_number >= 19:
-    shell[0].append(at)
-shell[0] = my_clean_list(shell[0])
-qm += shell[0]
-qm = my_clean_list(qm)
-summarize_step(stp_cnt, shell[0], qm, "metal center")
+dnts['cent'] = metal_center(19) # start with potassium
+dnts.update()
+summarize_step(stp_cnt, dnts['cent'], qm, "metal center")
 
 ################################################################################
 # 02 - find the direct neighbours to the metal center                          #
 ################################################################################
 
 stp_cnt += 1
-shell.append([]) # create shell[1] for direct neighbours
-
-for mc in shell[0]:
-  for at in mc.neighbours:
-    shell[1].append(at)
-    qm.append(at)
-shell[1] = my_clean_list(shell[1])
-qm = my_clean_list(qm)
-summarize_step(stp_cnt, shell[1], qm, "direct neighbours")
+dnts['close'] = close_neighbors()
+dnts.update()
+summarize_step(stp_cnt, dnts['close'], qm, "direct neighbours")
 
 ################################################################################
 # 03 - additional search based on distance, use the VdW radii for validity     #
@@ -813,63 +1246,18 @@ summarize_step(stp_cnt, shell[1], qm, "direct neighbours")
 ################################################################################
 
 stp_cnt += 1
-shell.append([]) # create shell[2] for distant neighbours
-bnd_cnt = 0      # counter for new bonds
-vdw_sum = 0.0    # sum of the VdW radii of a long distance contact
-vdw_fac = 0.8    # cut-off factor for the sum of VdW radii
-
-if VerboseFlag == 2:
-  printf("Step 03 - Distant neighbour search\n")
-  printf("  <= 3.0 A and <= %.0f%% of the VdW radius\n", vdw_fac*100)
-for a1 in shell[0]: # loop over all atoms
-  for a2 in mol.atoms: # loop over all atoms
-    if a1 == a2 : continue
-    dist = atom_dist(a1, a2)
-    vdw_sum =  (1.0 * a1.vdw_radius)  # The type of the vdw_property appears to be
-    vdw_sum += (1.0 * a2.vdw_radius)  # context dependent. I force it to a float.
-    vdw_sum *= vdw_fac                # Apply cut-off factor
-    if dist < 3.0 and a2 not in qm:
-      if VerboseFlag == 2:
-        printf("  %s%i",    a1.atomic_symbol, a1.index)
-        printf( "-%s%i",    a2.atomic_symbol, a2.index)
-        printf("  %6.4f",   dist)
-        printf("  %6.4f",   vdw_sum)
-        if dist<=vdw_sum: printf("  Passed\n")
-        else: printf("  too long\n")
-      if dist<=vdw_sum:
-        shell[2].append(a2)
-        # Adding new bonds messes with the CDS assignment of rings. The new 
-        # bonds can create small 3-member rings looping back to the metal 
-        # atoms. To reactivate the option for new bonds change False to True
-        if InMolBonds(mol, a1, a2)==-1 and bool(True):
-          mol.add_bond(1, a1, a2)
-          bnd_cnt += 1
-shell[2] = my_clean_list(shell[2])
-qm += shell[2]
-qm = my_clean_list(qm)
-summarize_step(stp_cnt, shell[2], qm, "distance based neighbours")
+dnts['dist'] = distant_neighbors(3.0, 0.8)
+dnts.update()
+summarize_step(stp_cnt, dnts['dist'], qm, "distance based neighbours")
 
 ################################################################################
 # 04 - add the atoms of rings containing direct neighbours                     #
 ################################################################################
 
 stp_cnt += 1
-shell.append([]) # create shell[3] for distance neighbours
-
-if VerboseFlag==2:
-  printf("Step %02i - rings containing neighbours atoms\n", stp_cnt)
-  printf("    atom  smallest ring\n")
-for ne in my_clean_list(shell[1]+shell[2]):
-  if VerboseFlag==2:
-    printf("  %6s  %i\n", MyLabel(ne), len(ne.rings))
-  if len(ne.rings)>0 and len(ne.rings[0])<=10 : # Is the atom member of a ring?
-    for at in ne.rings[0].atoms: # focus on the smallest ring
-      if at not in qm:
-        shell[3].append(at)
-shell[3] = my_clean_list(shell[3])
-qm += shell[3]
-qm  = my_clean_list(qm)
-summarize_step(stp_cnt, shell[3], qm, "rings containing neighbours atoms")
+dnts['nrings'] = neighbor_rings()
+dnts.update()
+summarize_step(stp_cnt, dnts['nrings'], qm, "rings containing neighbours atoms")
 
 ################################################################################
 # 05 - iteratively add aromatic rings sharing atoms with establishe QM core    #
@@ -877,140 +1265,45 @@ summarize_step(stp_cnt, shell[3], qm, "rings containing neighbours atoms")
 ################################################################################
 
 stp_cnt   += 1    # increase QM file counter
-shell.append([])  # create shell[4] for inner aromatic rings
-
-# create an intermediate test list for atoms to be tested
-itl = my_clean_list(shell[1]+shell[2]+shell[3])
-# find new MM aromatic ring atoms
-for sa in itl:
-  for ri in sa.rings: # test all rings
-    if ri.is_aromatic:
-      for at in ri.atoms: # add all aromatic ring atoms not in qm
-        if at not in qm:
-          shell[4].append(at)
-shell[4] = my_clean_list(shell[4])
-qm += shell[4]
-qm = my_clean_list(qm)
-summarize_step(stp_cnt, shell[4], qm, "central aromatic rings")
-
-# clean up variables
-del itl
+dnts['cArings'] = inner_aromatic_rings()
+dnts.update()
+summarize_step(stp_cnt, dnts['cArings'], qm, "inner aromatic rings")
 
 ################################################################################
 # 06 - grow the number of joined aromatic ring                                 #
 ################################################################################
 
 stp_cnt   += 1      # increase QM file counter
-shell.append([])    # create shell[5] for outer aromatic rings
-it_cnt = 0          # counter for iterative rounds          
-
-# create an intermediate test list for atoms to be tested
-itl = my_clean_list(shell[1]+shell[2]+shell[3]+shell[4])
-
-while bool(True):   # infinite loop for the iterative search
-  new_at = []       # atoms found by each loop of the iterative search
-  it_cnt += 1       # increase counter
-  # print current step to stdout
-  if VerboseFlag == 2:
-    printf("Step 06 - iterative search for aromatic rings\n")
-    printf("  %i atoms found in the previous step\n", len(new_at))
-  # check whether the new atoms are part of an aromatic ring and that these atoms
-  # are not in the QM core
-  for at in itl:
-    for ri in at.rings:
-      if ri.is_aromatic:
-        for tat in ri.atoms:
-          if tat not in qm:
-            new_at.append(tat)
-  if len(new_at) == 0:
-    break
-  else:
-    shell[5] += new_at
-    shell[5] = my_clean_list(shell[5])
-    itl = my_clean_list(shell[1]+shell[2]+shell[3]+shell[4]+shell[5])
-    new_at = []
-    qm += shell[5]
-    qm = my_clean_list(qm)
-if VerboseFlag == 2:
-  printf("  %i iterative search rounds needed\n", it_cnt)
-summarize_step(stp_cnt, shell[4], qm, "iterative search for aromatic rings")
-
-# clean up variables
-del itl, it_cnt
+dnts['gArings'] = grow_aromatic_rings()
+dnts.update()
+summarize_step(stp_cnt, dnts['gArings'], qm, "iterative search for aromatic rings")
 
 ################################################################################
 # 07 - looking for 1 atom links between QM atoms                               #
 ################################################################################
 
 stp_cnt   += 1      # increase QM file counter
-shell.append([])    # create shell[6] for 1 atom links
-
-if VerboseFlag == 2:
-  printf("Step %02i - 1 atom links", stp_cnt-1)
-  printf("  list of all found links\n")
-for sa in qm:
-  for ea in qm:
-    if sa.index == ea.index:
-      continue
-    for la in sa.neighbours:
-      if la in ea.neighbours and la not in qm:
-        shell[6].append(la)
-        if VerboseFlag == 2:
-          printf("  %s%i-", sa.atomic_symbol, sa.index)
-          printf("%s%i-", la.atomic_symbol, la.index)
-          printf("%s%i\n", ea.atomic_symbol, ea.index)
-shell[6] = my_clean_list(shell[6])
-qm += shell[6]
-qm = my_clean_list(qm)
-summarize_step(stp_cnt, shell[6], qm, "1 atom links")
+dnts['aLink'] = one_atom_links()
+dnts.update()
+summarize_step(stp_cnt, dnts['aLink'], qm, "1 atom links")
 
 ################################################################################
 # 08 - looking for 2 atom links between the rings                              #
 ################################################################################
 
 stp_cnt   += 1      # increase QM file counter
-shell.append([])    # create shell[7] for 2 atom links
-
-if VerboseFlag == 2:
-  printf("Step %02i - 2 atom links", stp_cnt-1)
-  printf("  list of all found links\n")
-
-for b0 in qm:
-  for b1 in b0.neighbours:
-    for b2 in b1.neighbours:
-      for b3 in b2.neighbours:
-        if VerboseFlag == 2:
-          printf("  %s%i-", b0.atomic_symbol, b0.index)
-          printf("%s%i-",   b1.atomic_symbol, b1.index)
-          printf("%s%i-",   b2.atomic_symbol, b2.index)
-          printf("%s%i  ",  b3.atomic_symbol, b3.index)
-          if (b1 not in qm and b2 not in qm and b3 in qm):
-            printf("Add\n")
-          else:
-            printf("Del\n")
-        if (b1 not in qm and b2 not in qm and b3 in qm):
-          shell[7].append(b1)
-          shell[7].append(b2)
-shell[7] = my_clean_list(new_at)
-qm += shell[7]
-qm = my_clean_list(qm)
-summarize_step(stp_cnt, shell[7], qm, "2 atom links")
+dnts['aaLink'] = two_atom_links()
+dnts.update()
+summarize_step(stp_cnt, dnts['aaLink'], qm, "2 atom links")
 
 ################################################################################
 # 09 - adding single hydrogen atoms                                            #
 ################################################################################
 
 stp_cnt   += 1      # increase QM file counter
-shell.append([])    # create shell[8] for H atoms links
-
-for at in qm:
-  for na in at.neighbours:
-    if na.atomic_number == 1 and na not in qm:
-      shell[8].append(na)
-shell[8] = my_clean_list(shell[8])
-qm += shell[8]
-qm = my_clean_list(qm)
-summarize_step(stp_cnt, shell[8], qm, "H atoms")
+dnts['hatom'] = lone_H_atoms()
+dnts.update()
+summarize_step(stp_cnt, dnts['hatom'], qm, "H atoms")
 
 ################################################################################
 # Final step - create MM layer
@@ -1043,58 +1336,11 @@ list_xyz(combi, fname, comment)
 
 ################################################################################
 # Test step to check for conjugated chanins
-#   This block will move later
-#   Develop this nlock into a function to search for conjugated chains
 ################################################################################
 
 qm_cnt += 1
-shell.append([])    # create shell[9] for conjugated chains
-
-# I change my approach. Instead looking for chains I spread out unit
-# per unit testing every quantum atom.
-
-while bool(True):
-  cl1 = 0
-  trip = []
-  gotcha = 0
-  for at1 in my_clean_list(qm): # Loop over all QM atoms
-    printf("Testing %s-%i\n", at1.atomic_symbol, at1.index)
-    cl1, trip = check_conjugation(at1)
-    if cl1 != 0:
-      printf("  %-10s  %2i\n", triad_string(trip), cl1)
-      for nat in trip:
-        if nat not in qm:
-          gotcha = 1
-          shell[9].append(nat)
-  shell[9] = my_clean_list(shell[9])
-  qm += shell[9]
-  qm = my_clean_list(qm)
-  if gotcha == 0:
-    break
-summarize_step(stp_cnt, shell[9], qm, "conjugated chains")
+dnts['conju'] = conjugated_chains()
+dnts.update()
+summarize_step(stp_cnt, dnts['conju'], qm, "conjugated chains")
 
 exit()
-
-# add the neighborhood of the functional group atoms
-# build a list of all atoms neighboring the functional groups
-
-qm_cnt += 1
-new_at = []
-for fgat in shell03:
-  for at in fgat.neighbours:
-    if at not in shell02:
-      new_at.append(at)
-      if len(at.rings) != 0:
-        if at.rings[0].is_aromatic:
-          for z in at.rings[0].atoms:
-            new_at.append(z)
-if len(new_at) > 0:
-  new_at=list(set(new_at))
-  shell03 += new_at
-  shell03=list(set(shell03))
-  del new_at
-fname = "qm_at%02i.xyz" % qm_cnt
-list_xyz(shell03, fname, "Center, func. groups, neighbors")
-# merge the results
-qm += shell03
-qm=list(set(qm))

@@ -83,16 +83,24 @@ Search for functional groups
   No [Fe][O] group(s) found.
   0 functional group(s) found.
 Start the actual QM/MM partioning process
+Variable qm in globals.
+Variable VerboseFlag in globals.
 Step 01 - metal center
   1 new atoms found
    15  Fe    0.000000    0.000000    2.718300
   Write stp01.xyz
+Variable qm in globals.
+Variable dnts in globals.
+Variable VerboseFlag in globals.
 Step 02 - direct neighbours
   2 new atoms found
    27  Cl   -1.669500    0.000000    4.072600
    28  Cl    1.669500    0.000000    4.072600
   Write stp02.xyz
-Step 03 - Distant neighbour search
+Variable qm in globals.
+Variable dnts in globals.
+Variable VerboseFlag in globals.
+Distant neighbour search
   <= 3.0 A and <= 80% of the VdW radius
   Fe15-O2  2.6885  2.8160  Passed
   Fe15-O4  2.6885  2.8160  Passed
@@ -101,32 +109,44 @@ Step 03 - distance based neighbours
     2   O    0.000000    1.804500    0.725400
     4   O    0.000000   -1.804500    0.725400
   Write stp03.xyz
-Step 04 - rings containing neighbours atoms
+Variable qm in globals.
+Variable dnts in globals.
+Variable VerboseFlag in globals.
+Rings containing neighbours atoms
     atom  smallest ring
-     O-2  1
-     O-4  1
-   Cl-27  0
-   Cl-28  0
+     O-2  6
+     O-4  6
+   Cl-27  -
+   Cl-28  -
 Step 04 - rings containing neighbours atoms
   3 new atoms found
     0   C    0.000000    1.332200   -0.518800
     1   C    0.000000    0.000000   -1.034100
     3   C    0.000000   -1.332200   -0.518800
   Write stp04.xyz
-Step 05 - central aromatic rings
+Variable qm in globals.
+Variable dnts in globals.
+Variable VerboseFlag in globals.
+Step 05 - inner aromatic rings
   0 new atoms found
   Write stp05.xyz
-Step 06 - iterative search for aromatic rings
-  0 atoms found in the previous step
-  1 iterative search rounds needed
+Variable qm in globals.
+Variable dnts in globals.
+Variable VerboseFlag in globals.
+Details for the iterative search for aromatic rings
+  0 iterative search rounds needed
 Step 06 - iterative search for aromatic rings
   0 new atoms found
   Write stp06.xyz
-Step 06 - 1 atom links  list of all found links
+Variable qm in globals.
+Variable VerboseFlag in globals.
+List of all found 1-atom links
 Step 07 - 1 atom links
   0 new atoms found
   Write stp07.xyz
-Step 07 - 2 atom links  list of all found links
+Variable qm in globals.
+Variable VerboseFlag in globals.
+List of all found 2-atom links
   C0-C1-C0-C1  Del
   C0-C1-C0-O2  Del
   C0-C1-C0-C7  Del
@@ -263,6 +283,8 @@ Step 07 - 2 atom links  list of all found links
 Step 08 - 2 atom links
   0 new atoms found
   Write stp08.xyz
+Variable qm in globals.
+Variable VerboseFlag in globals.
 Step 09 - H atoms
   0 new atoms found
   Write stp09.xyz
@@ -293,6 +315,8 @@ Step 10 - only MM atoms
 Combined output:
   QM atoms: 8
   MM atoms: 21
+Variable qm in globals.
+Variable VerboseFlag in globals.
 Testing C-0
 Testing triad C0-C1-C16
   ind1: 22, ind2 11
