@@ -103,6 +103,17 @@
 #     stp 06 -> gArings, shell[5]  central aromatic rings
 # - Screw up in the output from step 06 fixed. The search results
 #   were oK and did needed to be changed.
+# 10.09.24
+# - Continue with the work on the dictionary
+#     stp 07 -> aLink,   shell[6]  1 atom bridges
+#     stp 08 -> aaLink,  shell[7]  2 atom bridges
+#     stp 09 -> hatom,   shell[8]  H atoms attached to the QM core
+# - Transformation of shells[0] to shell[8] finished and double
+#   checked using <grep -n "shell\[8\]" ccdc_q11.py>
+# - Make the serach for conjugated units movable
+#   The conjugated atoms were collected in the old shell[9]
+#     stp __ -> conju,   shell[9]  atoms in conjugated chains
+
 
 # Load modules for Python coding
 import sys                      # IO Basics
@@ -800,8 +811,8 @@ shell.append([]) # create shell[0] for central metal atoms
 
 for at in mol.atoms:
   if at.is_metal and at.atomic_number >= 19:
-    shell[0].append(at)
-shell[0] = my_clean_list(shell[stp_cnt-1])
+    shell[stp_cnt-1].append(at)
+shell[stp_cnt-1] = my_clean_list(shell[stp_cnt-1])
 qm += shell[stp_cnt-1]
 qm = my_clean_list(qm)
 dnts['cent'] = shell[stp_cnt-1]
@@ -934,7 +945,7 @@ shell.append([])    # create shell[5] for outer aromatic rings
 it_cnt = 0          # counter for iterative rounds          
 
 # create an intermediate test list for atoms to be tested
-itl = my_clean_list(shell[1]+shell[2]+shell[3]+shell[4])
+itl = my_clean_list(dnts['close']+dnts['dist']+dnts['nrings']+dnts['cArings'])
 
 if VerboseFlag == 2:
   printf("Step 06 - iterative search for aromatic rings\n")
@@ -970,8 +981,6 @@ summarize_step(stp_cnt, dnts['gArings'], qm, "iterative search for aromatic ring
 # clean up variables
 del itl, it_cnt
 
-exit()
-
 ################################################################################
 # 07 - looking for 1 atom links between QM atoms                               #
 ################################################################################
@@ -980,7 +989,7 @@ stp_cnt   += 1      # increase QM file counter
 shell.append([])    # create shell[6] for 1 atom links
 
 if VerboseFlag == 2:
-  printf("Step %02i - 1 atom links", stp_cnt-1)
+  printf("Step %02i - 1 atom links", stp_cnt)
   printf("  list of all found links\n")
 for sa in qm:
   for ea in qm:
@@ -988,15 +997,17 @@ for sa in qm:
       continue
     for la in sa.neighbours:
       if la in ea.neighbours and la not in qm:
-        shell[6].append(la)
+        shell[stp_cnt-1].append(la)
         if VerboseFlag == 2:
           printf("  %s%i-", sa.atomic_symbol, sa.index)
           printf("%s%i-", la.atomic_symbol, la.index)
           printf("%s%i\n", ea.atomic_symbol, ea.index)
-shell[6] = my_clean_list(shell[6])
-qm += shell[6]
+shell[stp_cnt-1] = my_clean_list(shell[stp_cnt-1])
+qm += shell[stp_cnt-1]
 qm = my_clean_list(qm)
-summarize_step(stp_cnt, shell[6], qm, "1 atom links")
+dnts['aLink'] = shell[stp_cnt-1]
+dnts.update()
+summarize_step(stp_cnt, dnts['aLink'], qm, "1 atom links")
 
 ################################################################################
 # 08 - looking for 2 atom links between the rings                              #
@@ -1006,7 +1017,7 @@ stp_cnt   += 1      # increase QM file counter
 shell.append([])    # create shell[7] for 2 atom links
 
 if VerboseFlag == 2:
-  printf("Step %02i - 2 atom links", stp_cnt-1)
+  printf("Step %02i - 2 atom links", stp_cnt)
   printf("  list of all found links\n")
 
 for b0 in qm:
@@ -1023,12 +1034,14 @@ for b0 in qm:
           else:
             printf("Del\n")
         if (b1 not in qm and b2 not in qm and b3 in qm):
-          shell[7].append(b1)
-          shell[7].append(b2)
-shell[7] = my_clean_list(new_at)
-qm += shell[7]
+          shell[stp_cnt-1].append(b1)
+          shell[stp_cnt-1].append(b2)
+shell[stp_cnt-1] = my_clean_list(new_at)
+qm += shell[stp_cnt-1]
 qm = my_clean_list(qm)
-summarize_step(stp_cnt, shell[7], qm, "2 atom links")
+dnts['aaLink'] = shell[stp_cnt-1]
+dnts.update()
+summarize_step(stp_cnt, dnts['aaLink'], qm, "2 atom links")
 
 ################################################################################
 # 09 - adding single hydrogen atoms                                            #
@@ -1040,11 +1053,13 @@ shell.append([])    # create shell[8] for H atoms links
 for at in qm:
   for na in at.neighbours:
     if na.atomic_number == 1 and na not in qm:
-      shell[8].append(na)
-shell[8] = my_clean_list(shell[8])
-qm += shell[8]
+      shell[stp_cnt-1].append(na)
+shell[stp_cnt-1] = my_clean_list(shell[stp_cnt-1])
+qm += shell[stp_cnt-1]
 qm = my_clean_list(qm)
-summarize_step(stp_cnt, shell[8], qm, "H atoms")
+dnts['hatom'] = shell[stp_cnt-1]
+dnts.update()
+summarize_step(stp_cnt, dnts['hatom'], qm, "H atoms")
 
 ################################################################################
 # Final step - create MM layer
@@ -1099,13 +1114,15 @@ while bool(True):
       for nat in trip:
         if nat not in qm:
           gotcha = 1
-          shell[9].append(nat)
-  shell[9] = my_clean_list(shell[9])
-  qm += shell[9]
+          shell[stp_cnt-1].append(nat)
+  shell[stp_cnt-1] = my_clean_list(shell[stp_cnt-1])
+  qm += shell[stp_cnt-1]
   qm = my_clean_list(qm)
   if gotcha == 0:
     break
-summarize_step(stp_cnt, shell[9], qm, "conjugated chains")
+dnts['conju'] = shell[stp_cnt-1]
+dnts.update()
+summarize_step(stp_cnt, dnts['conju'], qm, "conjugated chains")
 
 exit()
 
