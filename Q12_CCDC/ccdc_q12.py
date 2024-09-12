@@ -103,7 +103,7 @@
 #     stp 06 -> gArings, shell[5]  central aromatic rings
 # - Screw up in the output from step 06 fixed. The search results
 #   were oK and did needed to be changed.
-# 10.09.24
+# 11.09.24
 # - Continue with the work on the dictionary
 #     stp 07 -> aLink,   shell[6]  1 atom bridges
 #     stp 08 -> aaLink,  shell[7]  2 atom bridges
@@ -134,6 +134,11 @@
 #   removed the need for the shell list. I will delete it from the
 #   code and use the dictionary dnts instead.
 #   The code doesn't crash after I removed the shell list.
+# 12.09.2024
+# - Before I merge both search metods, I slim the main code
+# - Merge both search strategies
+#   Tests with chain01 to chain06 worked out well
+# - GitHub commit 240912 - 13:50
 
 # Load modules for Python coding
 import sys                      # IO Basics
@@ -472,7 +477,8 @@ def con_unit(mymol, at1, at2, at3):
   if 1 in [at1.atomic_number, at2.atomic_number, at3.atomic_number]:
     # print("No H atoms allowd")
     return(0)
-  printf("Testing triad %s\n", triad_string([at1, at2, at3]))
+  if VerboseFlag==2:
+    printf("Testing triad %s\n", triad_string([at1, at2, at3]))
   if bool(True):
     # Use the number of neighbours to estimate the hybridization state
     # Each atom shukd have less then 4 direct neighbours
@@ -582,7 +588,8 @@ def conjugated_chains():
         printf("Testing %s-%i\n", at1.atomic_symbol, at1.index)
       cl1, trip = check_conjugation(at1)
       if cl1 != 0:
-        printf("  %-10s  %2i\n", triad_string(trip), cl1)
+        if VerboseFlag==2:
+          printf("  %-10s  %2i\n", triad_string(trip), cl1)
         for nat in trip:
           if nat not in qm:
             gotcha = 1
@@ -727,7 +734,8 @@ def grow_aromatic_rings():
   new_atoms = []  # empty list for serach results
   it_cnt = 0      # counter for iterative rounds          
   # create an intermediate test list for atoms to be tested
-  itl = dnts['close']+dnts['dist']+dnts['nrings']+dnts['cArings']
+  # itl = dnts['close']+dnts['dist']+dnts['nrings']+dnts['cArings']+dnts['conju']
+  itl = list(set(qm) - set(dnts['cent']))
   itl = my_clean_list(itl)
   if VerboseFlag == 2:
     printf("Details for the iterative search for aromatic rings\n")
@@ -977,8 +985,11 @@ def summarize_step(cnt, nlist, flist, mytxt):
     my_atom_list(nlist, "  ")
   # write atom list to disk
   fname = "stp%02i.xyz" % cnt
-  printf("  Write %s\n", fname)
-  list_xyz(flist, fname, mytxt)
+  if len(flist)>0:
+    printf("  Write %s\n", fname)
+    list_xyz(flist, fname, mytxt)
+  else:
+    printf("  Skip  %s\n", fname)
   return bool(True)
 
 
@@ -993,6 +1004,7 @@ def summarize_step(cnt, nlist, flist, mytxt):
 ##                                                                            ##
 ################################################################################
 ################################################################################
+
 
 ################################################################################
 # parse comand line parameter (this should do for now)                         #
@@ -1218,103 +1230,89 @@ printf("  %i functional group(s) found.\n", len(func_groups))
 if VerboseFlag > 0:
   printf("Start the actual QM/MM partioning process\n")
 
-################################################################################
-# 01 - find metal centers                                                      #
-################################################################################
-
+# find metal centers
 stp_cnt = 1
 dnts['cent'] = metal_center(19) # start with potassium
 dnts.update()
 summarize_step(stp_cnt, dnts['cent'], qm, "metal center")
 
-################################################################################
-# 02 - find the direct neighbours to the metal center                          #
-################################################################################
-
+# find the direct neighbours to the metal center
 stp_cnt += 1
 dnts['close'] = close_neighbors()
 dnts.update()
 summarize_step(stp_cnt, dnts['close'], qm, "direct neighbours")
 
-################################################################################
-# 03 - additional search based on distance, use the VdW radii for validity     #
-#      The atom radius seems NOT to be defined in the CSD API. A valid         #
-#      alternative is the Van der Waals Radius. If the VdW radius is not       #
-#      defined for the CSD API, the API returns a default value of 2.0 A.      #
-#      I set the cut-off value arbitrarily at 80% of the VdW sum.              #
-#      The pure distance cut-off is set at 3.0 A.                              #
-################################################################################
-
+# additional search based on distance, use the VdW radii for validity
 stp_cnt += 1
 dnts['dist'] = distant_neighbors(3.0, 0.8)
 dnts.update()
 summarize_step(stp_cnt, dnts['dist'], qm, "distance based neighbours")
 
-################################################################################
-# 04 - add the atoms of rings containing direct neighbours                     #
-################################################################################
-
+# add the atoms of rings containing direct neighbours
 stp_cnt += 1
 dnts['nrings'] = neighbor_rings()
 dnts.update()
 summarize_step(stp_cnt, dnts['nrings'], qm, "rings containing neighbours atoms")
 
-################################################################################
-# 05 - iteratively add aromatic rings sharing atoms with establishe QM core    #
-#      first round of aromatic ring joined to inner rings                      #
-################################################################################
-
+# first round of aromatic ring joined to inner rings
 stp_cnt   += 1    # increase QM file counter
 dnts['cArings'] = inner_aromatic_rings()
 dnts.update()
 summarize_step(stp_cnt, dnts['cArings'], qm, "inner aromatic rings")
 
-################################################################################
-# 06 - grow the number of joined aromatic ring                                 #
-################################################################################
-
-stp_cnt   += 1      # increase QM file counter
-dnts['gArings'] = grow_aromatic_rings()
+printf("\nEntering search loop\n")
+dnts['conju']   = []
+dnts['gArings'] = []
 dnts.update()
-summarize_step(stp_cnt, dnts['gArings'], qm, "iterative search for aromatic rings")
+hc = []  # help/intermediate variable for conjugated chains
+ha = []  # help/intermediate variable for aromatic rings
+cnt = 0
+while bool(True):
+  cnt+=1
+  num_new_at = 0
+  # Test step to check for conjugated chanins
+  stp_cnt += 1
+  hc = conjugated_chains()
+  num_new_at += len(hc)
+  dnts['conju'] = my_clean_list(dnts['conju'] + hc)
+  dnts.update()
+  summarize_step(stp_cnt, hc, qm, "conjugated chains")
+  # grow the number of joined aromatic ring
+  stp_cnt   += 1
+  ha = grow_aromatic_rings()
+  num_new_at += len(ha)
+  dnts['gArings'] += ha
+  dnts.update()
+  summarize_step(stp_cnt, ha, qm, "iterative search for aromatic rings")
+  if num_new_at==0:
+    printf("Round %i:  no new atoms\n", cnt)
+    break
+  else:
+    printf("Round %i:  %2i new atoms\n\n", cnt, num_new_at)
+printf("Leaving search loop\n\n")
+del hc, ha, cnt
 
-################################################################################
-# 07 - looking for 1 atom links between QM atoms                               #
-################################################################################
-
-stp_cnt   += 1      # increase QM file counter
+# looking for 1 atom links between QM atoms
+stp_cnt   += 1
 dnts['aLink'] = one_atom_links()
 dnts.update()
 summarize_step(stp_cnt, dnts['aLink'], qm, "1 atom links")
 
-################################################################################
-# 08 - looking for 2 atom links between the rings                              #
-################################################################################
-
-stp_cnt   += 1      # increase QM file counter
+# looking for 2 atom links between the rings
+stp_cnt   += 1
 dnts['aaLink'] = two_atom_links()
 dnts.update()
 summarize_step(stp_cnt, dnts['aaLink'], qm, "2 atom links")
 
-################################################################################
-# 09 - adding single hydrogen atoms                                            #
-################################################################################
-
-stp_cnt   += 1      # increase QM file counter
+# adding single hydrogen atoms
+stp_cnt   += 1
 dnts['hatom'] = lone_H_atoms()
 dnts.update()
 summarize_step(stp_cnt, dnts['hatom'], qm, "H atoms")
 
-################################################################################
-# Final step - create MM layer
-#   any atom not QM is MM
-#   combine both sets in one xyz file for output
-################################################################################
-
-stp_cnt   += 1      # increase file counter
-mm = []             # create the list for MM atoms
-
 # create mm layer
+stp_cnt   += 1
+mm = []
 for at in mol.atoms:
   if at in qm:
     pass
@@ -1333,14 +1331,5 @@ combi = qm + mm
 fname = "combi.xyz"
 comment = "QM: %i atoms, MM: %i atoms" % (len(qm), len(mm))
 list_xyz(combi, fname, comment)
-
-################################################################################
-# Test step to check for conjugated chanins
-################################################################################
-
-qm_cnt += 1
-dnts['conju'] = conjugated_chains()
-dnts.update()
-summarize_step(stp_cnt, dnts['conju'], qm, "conjugated chains")
 
 exit()
