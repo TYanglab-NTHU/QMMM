@@ -139,6 +139,10 @@
 # - Merge both search strategies
 #   Tests with chain01 to chain06 worked out well
 # - GitHub commit 240912 - 13:50
+# - Cleanup code
+#   * command line parser stays
+#   * clean up of old files stays
+#   * reading input files goes into a function
 
 # Load modules for Python coding
 import sys                      # IO Basics
@@ -197,6 +201,9 @@ VerboseFlag = 1 # flag to control the output level
 ################################################################################
 
 def clean_glob_var(vlist):
+  if "VerboseFlag" not in globals():
+    print("Variable 'VerboseFlag' not globally defined")
+    exit()
   anz = 0
   g = globals()
   for var in vlist:
@@ -898,8 +905,8 @@ def distant_neighbors(max, vdw_fac):
   new_atoms = my_clean_list(new_atoms)
   qm += new_atoms
   qm = my_clean_list(qm)
-
   return(new_atoms)
+
 ################################################################################
 # functions to to help with the QM/MM separation                               #
 # find close neighbors                                                         #
@@ -992,6 +999,203 @@ def summarize_step(cnt, nlist, flist, mytxt):
     printf("  Skip  %s\n", fname)
   return bool(True)
 
+################################################################################
+# functions for the compartimensation of the  QM/MM separation                 #
+# read input file                                                              #
+# global VerboseFlag  controll the output to stdout                            #
+# input  inp_name     name of the input file with the path to it               #
+# output mol          CSD molecule object                                      #
+#        obmol        OpenBabel molecule object                                #
+################################################################################
+
+def read_input_file(inp_name):
+
+  # is VerboseFlag globally defined
+  if "VerboseFlag" not in globals():
+    print("Variable 'VerboseFlag' not globally defined")
+    exit()
+
+  # split input names into useful token
+  root, ext = os.path.splitext(inp_name)
+  path, file = os.path.split(inp_name)
+  path += '/'
+  base = root.replace(path, '')
+  if VerboseFlag == 2:
+    print("ext  ", ext)
+    print("path ", path)
+    print("base ", base)
+
+  # check if the file exists
+  if not os.path.isfile(inp_name):
+    printf("file %s not found\n", inp_name)
+    exit()
+
+  # handle the input file by extention
+  if VerboseFlag > 0: printf("Process input file %s\n", inp_name)
+  input_type = ext.lower()
+  if input_type not in ['.xyz', '.mol2']:
+    printf("Wrong input file type\n")
+    exit()
+
+  # handel xyz file by converting them to mol2
+  # If a mol2 file with same name is available, I will read the available 
+  # file. If no substitute is available, the xyz file will be converted
+  # into a mol2 file. Finally, the name of the input file will be updated
+  # so that the input can be processed in the standard way.
+  if input_type==".xyz":
+    if VerboseFlag > 0: printf("  process xyz input file (depreciated)\n")
+    mol2_inp_name = inp_name.replace(ext, ".mol2")
+    if os.path.isfile(mol2_inp_name):
+      if VerboseFlag > 0:
+        printf("  %s (easier to use file format) found\n", mol2_inp_name)
+      # update input information
+      inp_name = mol2_inp_name
+      ext = ".mol2"
+      input_type = ".mol2"
+    else:
+      if VerboseFlag > 0:
+        printf("  use Python module OpenBabel to convert %s%s\n", base, ext)
+      obConversion = ob.OBConversion()
+      obConversion.SetInAndOutFormats("xyz", "mol2")
+      obmol = ob.OBMol()
+      obConversion.ReadFile(obmol, inp_name)
+      if VerboseFlag > 0:
+        printf("  write converted file %s\n", mol2_inp_name)
+      obConversion.WriteFile(obmol, mol2_inp_name)
+      if VerboseFlag > 0:
+        printf("  switch to %s\n", mol2_inp_name)
+      if VerboseFlag == 2:
+        printf("  delete ObenBabel object (rebuild later)\n")
+      del obConversion, obmol
+      # update input information
+      inp_name = mol2_inp_name
+      ext = ".mol2"
+      input_type = ".mol2"
+
+  # process the preferred mol2 input file
+  # This part is in a conditional block so that the number of input
+  # file types can be extended later.
+  if input_type==".mol2":
+    if VerboseFlag > 0:
+      printf("  process mol2 input file (preferred)\n")
+      printf("  read input file directly into a CSD object\n")
+    mol_reader = io.MoleculeReader(inp_name)
+    mol = mol_reader[0]
+    if VerboseFlag > 0:
+      printf("  standarize bonds\n")
+    mol.assign_bond_types()
+    mol.standardise_aromatic_bonds()
+    mol.standardise_delocalised_bonds()
+
+  # At this point I should have a CSD molecule object.
+  # build auxiliary OpenBabel molecule object by reading the mol2 file
+  if VerboseFlag > 0:
+    printf("  build supplementary OpenBabel object from mol2 file\n")
+  obConversion = ob.OBConversion()
+  obConversion.SetInAndOutFormats("mol2", "mol2")
+  obmol = ob.OBMol()
+  obConversion.ReadFile(obmol, inp_name)
+  if VerboseFlag > 0:
+    printf("  compare the molecular geometries of both objects\n")
+  csdanz = len(mol.atoms)
+  obanz  = obmol.NumAtoms()
+  if VerboseFlag==2:
+    printf("  Number of atoms: CSD %i   OB %i\n", csdanz, obanz)
+  if csdanz != obanz:
+    print("The number of atoms in both molecule objects (CSD:  %i, OB: %i) don't match",
+          csdanz, obanz)
+    exit()
+  else:
+    if VerboseFlag>0:
+      printf("    the number of atoms %i in both objects match\n", csdanz)
+  if VerboseFlag>0:
+    printf("    compare geometries line by line ...\n")
+  for n in range(csdanz):
+    obatom = obmol.GetAtom(n+1)
+    csdnum = mol.atoms[n].atomic_number
+    obnum  = obatom.GetAtomicNum()
+    csdX = mol.atoms[n].coordinates.x
+    csdY = mol.atoms[n].coordinates.y
+    csdZ = mol.atoms[n].coordinates.z
+    obX  = obatom.GetX()
+    obY  = obatom.GetY()
+    obZ  = obatom.GetZ()
+    deltaX = abs(csdX-obX)
+    deltaY = abs(csdY-obY)
+    deltaZ = abs(csdZ-obZ)
+    if VerboseFlag==2:
+      printf("    %3i", n)
+      printf(  "  %3i", csdnum)
+      printf(  "  %3i", obnum)
+      printf(  "  %10.6f", deltaX)
+      printf(  "  %10.6f", deltaY)
+      printf(  "  %10.6f", deltaZ)
+      printf("\n")
+    if csdnum != obnum:
+      printf("The atomic numbers (CSD %i, OB %i) for entry #%i don't match\n",
+            csdnum, obnum, n)
+      exit()
+    if deltaX >= 0.0001:
+      printf("The X coordinates (CSD %.6f, OB %.6f) for entry #%i don't match\n",
+            csdX, obX, n)
+      exit()
+    if deltaY >= 0.0001:
+      printf("The Y coordinates (CSD %.6f, OB %.6f) for entry #%i don't match\n",
+            csdY, obY, n)
+      exit()
+    if deltaZ >= 0.0001:
+      printf("The Z coordinates (CSD %.6f, OB %.6f) for entry #%i don't match\n",
+            csdZ, obZ, n)
+      exit()
+  if VerboseFlag>0: printf("    the geometries of both objects match\n")
+  # return both molecule objects
+  return(mol, obmol)
+
+################################################################################
+# functions for the compartimensation of the  QM/MM separation                 #
+# read input file                                                              #
+# global VerboseFlag  controll the output to stdout                            #
+# input  mol          CSD mol                                                  #
+#        smarts_list  list with SMARTS strings for the functionl groups        #
+# output func_groups  list of lists containing the atoms of detected groups    #
+################################################################################
+
+def find_functional_groups(mol, smarts_list):
+  func_groups = []
+  # is VerboseFlag globally defined
+  if "VerboseFlag" not in globals():
+    print("Variable 'VerboseFlag' not globally defined")
+    exit()
+  # loop over list of smarts for functional groups
+  if VerboseFlag>0:
+    printf("Search for functional groups\n")
+  for smarts in smarts_list:
+    # create a substructure form the smarts string
+    substrcuct = ccdc.search.SMARTSSubstructure(smarts)
+    # search for the substructure
+    substructure_search = SubstructureSearch()
+    substructure_search.add_substructure(substrcuct)
+    matches = substructure_search.search(mol)
+    # check and report matches
+    if matches:
+      if VerboseFlag>0:
+        printf("  Found %i %s group(s) in the molecule.\n", len(matches), smarts)
+      cnt=0
+      for match in matches:
+        if VerboseFlag>0: printf("    %2i", cnt)
+        fgroup=[]
+        for at in match.match_atoms():
+          str = "%s-%i" % (at.label, at.index)
+          if VerboseFlag>0: printf("  %-6s", str)
+          fgroup.append(at)
+        if VerboseFlag>0: printf("\n")
+        cnt+=1
+        func_groups.append(fgroup)
+    else:
+      if VerboseFlag>0: printf("  No %s group(s) found.\n", smarts)
+  if VerboseFlag>0:
+    printf("  %i functional group(s) found.\n", len(func_groups))
+  return(func_groups)
 
 ################################################################################
 ################################################################################
@@ -1052,176 +1256,33 @@ clean_glob_var(['my_arg', 'my_arglist', 'argpos', 'argcnt'])
 ################################################################################
 
 if VerboseFlag > 0: printf("Clean up old files\n")
-for file in glob.glob("qm_at*xyz"):
-  os.remove(file)
 for file in glob.glob("stp*xyz"):
   os.remove(file)
-if os.path.exists("./mm_at00.xyz"): os.remove("./mm_at00.xyz")
 if os.path.exists("./combi.xyz"): os.remove("./combi.xyz")
 
 ################################################################################
 # split the command line argument for the input file                           #
 ################################################################################
 
-root, ext = os.path.splitext(inp_name)
-path, file = os.path.split(inp_name)
-path += '/'
-base = root.replace(path, '')
-if VerboseFlag == 2:
-  print("ext  ", ext)
-  print("path ", path)
-  print("base ", base)
-
-# check for file
-if not os.path.isfile(inp_name):
-  printf("file %s not found\n", inp_name)
-  exit()
-
-# handle the input file by extention
-if VerboseFlag > 0: printf("Process input file %s\n", inp_name)
-input_type = ext.lower()
-if input_type not in ['.xyz', '.mol2']:
-  printf("Wrong input file type\n")
-  exit()
-
-# handel xyz file by converting them to mol2
-if input_type==".xyz":
-  if VerboseFlag > 0: printf("  process xyz input file (depreciated)\n")
-  mol2_inp_name = inp_name.replace(ext, ".mol2")
-  if os.path.isfile(mol2_inp_name):
-    if VerboseFlag > 0: printf("  %s (easier to use file format) found\n", mol2_inp_name)
-    inp_name = mol2_inp_name
-    ext = ".mol2"
-    input_type = ".mol2"
-  else:
-    if VerboseFlag > 0: printf("  use Python module OpenBabel to convert %s%s\n", base, ext)
-    obConversion = ob.OBConversion()
-    obConversion.SetInAndOutFormats("xyz", "mol2")
-    obmol = ob.OBMol()
-    obConversion.ReadFile(obmol, inp_name)
-    if VerboseFlag > 0: printf("  write converted file %s\n", mol2_inp_name)
-    obConversion.WriteFile(obmol, mol2_inp_name)
-    if VerboseFlag > 0:  printf("  switch to %s\n", mol2_inp_name)
-    if VerboseFlag == 2: printf("  delete ObenBabel object (rebuild later)\n")
-    clean_glob_var(['obConversion', 'obmol'])
-    inp_name = mol2_inp_name
-    ext = ".mol2"
-    input_type = ".mol2"
-# process the preferred mol2 input file
-if input_type==".mol2":
-  if VerboseFlag > 0:
-    printf("  process mol2 input file (preferred)\n")
-    printf("  read input file directly into a CSD object\n")
-  mol_reader = io.MoleculeReader(inp_name)
-  mol = mol_reader[0]
-  if VerboseFlag > 0: printf("  standarize bonds\n")
-  mol.assign_bond_types()
-  mol.standardise_aromatic_bonds()
-  mol.standardise_delocalised_bonds()
-  if VerboseFlag > 0: printf("  build supplementary OpenBabel object from mol2 file\n")
-  obConversion = ob.OBConversion()
-  obConversion.SetInAndOutFormats("mol2", "mol2")
-  obmol = ob.OBMol()
-  obConversion.ReadFile(obmol, inp_name)
-  if VerboseFlag > 0: printf("  compare the molecular geometries of both objects\n")
-  csdanz = len(mol.atoms)
-  obanz  = obmol.NumAtoms()
-  if VerboseFlag==2: printf("  Number of atoms: CSD %i   OB %i\n", csdanz, obanz)
-  if csdanz != obanz:
-    print("The number of atoms in both molecule objects (CSD:  %i, OB: %i) don't match",
-          csdanz, obanz)
-    exit()
-  else:
-    if VerboseFlag>0: printf("    the number of atoms %i in both objects match\n", csdanz)
-  if VerboseFlag>0: printf("    compare geometries line by line ...\n")
-  for n in range(csdanz):
-    obatom = obmol.GetAtom(n+1)
-    csdnum = mol.atoms[n].atomic_number
-    obnum  = obatom.GetAtomicNum()
-    csdX = mol.atoms[n].coordinates.x
-    csdY = mol.atoms[n].coordinates.y
-    csdZ = mol.atoms[n].coordinates.z
-    obX  = obatom.GetX()
-    obY  = obatom.GetY()
-    obZ  = obatom.GetZ()
-    deltaX = abs(csdX-obX)
-    deltaY = abs(csdY-obY)
-    deltaZ = abs(csdZ-obZ)
-    if VerboseFlag==2:
-      printf("    %3i", n)
-      printf(  "  %3i", csdnum)
-      printf(  "  %3i", obnum)
-      printf(  "  %10.6f", deltaX)
-      printf(  "  %10.6f", deltaY)
-      printf(  "  %10.6f", deltaZ)
-      printf("\n")
-    if csdnum != obnum:
-      printf("The atomic numbers (CSD %i, OB %i) for entry #%i don't match\n",
-             csdnum, obnum, n)
-      exit()
-    if deltaX >= 0.0001:
-      printf("The X coordinates (CSD %.6f, OB %.6f) for entry #%i don't match\n",
-             csdX, obX, n)
-      exit()
-    if deltaY >= 0.0001:
-      printf("The Y coordinates (CSD %.6f, OB %.6f) for entry #%i don't match\n",
-             csdY, obY, n)
-      exit()
-    if deltaZ >= 0.0001:
-      printf("The Z coordinates (CSD %.6f, OB %.6f) for entry #%i don't match\n",
-             csdZ, obZ, n)
-      exit()
-  if VerboseFlag>0: printf("    the geometries of both objects match\n")
-
-# clean up variables not to be used later
-clean_glob_var(['root', 'file', 'path', 'base', 'ext'])
-clean_glob_var(['obatom'])
-clean_glob_var(['csdanz', 'obanz', 'csdnum', 'obnum'])
-clean_glob_var(['csdX', 'obX', 'deltaX', 'csdY', 'obY', 'deltaY', 'csdZ', 'obZ', 'deltaZ'])
+mol, obmol = read_input_file(inp_name)
 
 ################################################################################
 # identify functional groups                                                   #
 ################################################################################
 
-# list of identfied functional groups to used later
-func_groups=[]
 
-printf("Search for functional groups\n")
 # list of smart strings for the search of functional groups
 # later rewrite this code to read the smarts form file
 smarts_list=[]
-smarts_list.append("C#N")         # nitrile / isonitile
-smarts_list.append("ccccccC#N")   # benzonitrile
-smarts_list.append("cCl")         # Cl-C_ar (pos. test)
-smarts_list.append("N#N")         # N2 gas  (neg. test)
-smarts_list.append("[Fe][N]")     # Fe-N contacts
-smarts_list.append("[Fe][O]")     # Fe-N contacts
+smarts_list.append("[CX2]#N")                        # nitrile
+smarts_list.append("[CX3](=O)[O]")                   # carboxylate
+smarts_list.append("[CX3](=O)[H]")                   # aldehyde
+smarts_list.append("[cX3][F,Cl,Br,I]")               # aryl halide
+smarts_list.append("[#6X3](~O)~[#6X3]~[#6X3](~O)")   # enolate
+smarts_list.append("[#6X3](=O)[#7X3](~H)")           # peptide
 
-# loop over list of smarts for functional groups
-for smarts in smarts_list:
-  # create a substructure form the smarts string
-  substrcuct = ccdc.search.SMARTSSubstructure(smarts)
-  # search for the substructure
-  substructure_search = SubstructureSearch()
-  substructure_search.add_substructure(substrcuct)
-  matches = substructure_search.search(mol)
-  # Check and report matches
-  if matches:
-    printf("  Found %i %s group(s) in the molecule.\n", len(matches), smarts)
-    cnt=0
-    for match in matches:
-      printf("    %2i", cnt)
-      fgroup=[]
-      for at in match.match_atoms():
-        str = "%s-%i" % (at.label, at.index)
-        printf("  %-6s", str)
-        fgroup.append(at)
-      printf("\n")
-      cnt+=1
-      func_groups.append(fgroup)
-  else:
-    printf("  No %s group(s) found.\n", smarts)
-printf("  %i functional group(s) found.\n", len(func_groups))
+# create lookup list for functional goups in the molecule
+func_groups = find_functional_groups(mol, smarts_list)
 
 ################################################################################
 # the actual separation code                                                   #
