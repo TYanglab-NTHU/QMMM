@@ -1280,6 +1280,7 @@ smarts_list.append("[CX3](=O)[H]")                   # aldehyde
 smarts_list.append("[cX3][F,Cl,Br,I]")               # aryl halide
 smarts_list.append("[#6X3](~O)~[#6X3]~[#6X3](~O)")   # enolate
 smarts_list.append("[#6X3](=O)[#7X3](~H)")           # peptide
+smarts_list.append("[#7X2]~[#7X2]~[#7X1]")           # azide
 
 # create lookup list for functional goups in the molecule
 func_groups = find_functional_groups(mol, smarts_list)
@@ -1305,7 +1306,7 @@ summarize_step(stp_cnt, dnts['close'], qm, "direct neighbours")
 
 # additional search based on distance, use the VdW radii for validity
 stp_cnt += 1
-dnts['dist'] = distant_neighbors(3.0, 0.8)
+dnts['dist'] = distant_neighbors(1.0, 0.8)
 dnts.update()
 summarize_step(stp_cnt, dnts['dist'], qm, "distance based neighbours")
 
