@@ -834,16 +834,24 @@ def neighbor_rings():
   itl = my_clean_list(itl)
   if VerboseFlag==2:
     printf("Rings containing neighbours atoms\n")
-    printf("    atom  smallest ring\n")
+    printf("    atom  r  s\n")
   for ne in itl:
     if VerboseFlag==2:
       printf("  %6s", MyLabel(ne))
       if len(ne.rings)>0:
-        printf("  %i\n", len(ne.rings[0]))
+        printf("  %i", len(ne.rings[0]))
+      else:
+        printf("  -")
+      if ne.is_spiro:
+        printf("  %i\n", len(ne.rings[1]))
       else:
         printf("  -\n")
     if len(ne.rings)>0 and len(ne.rings[0])<=10 : # Is the atom member of a ring?
       for at in ne.rings[0].atoms: # focus on the smallest ring
+        if at not in qm:
+          new_atoms.append(at)
+    if ne.is_spiro: # Is the atom member a spiro atom?
+      for at in ne.rings[1].atoms: # focus on the smallest ring
         if at not in qm:
           new_atoms.append(at)
   new_atoms = my_clean_list(new_atoms)
@@ -1278,6 +1286,7 @@ smarts_list.append("[CX2]#N")                        # nitrile
 smarts_list.append("[CX3](=O)[O]")                   # carboxylate
 smarts_list.append("[CX3](=O)[H]")                   # aldehyde
 smarts_list.append("[cX3][F,Cl,Br,I]")               # aryl halide
+smarts_list.append("[#6X3](=O)-[#7X3](-H)~[cX3]")
 smarts_list.append("[#6X3](~O)~[#6X3]~[#6X3](~O)")   # enolate
 smarts_list.append("[#6X3](=O)[#7X3](~H)")           # peptide
 smarts_list.append("[#7X2]~[#7X2]~[#7X1]")           # azide
@@ -1306,7 +1315,7 @@ summarize_step(stp_cnt, dnts['close'], qm, "direct neighbours")
 
 # additional search based on distance, use the VdW radii for validity
 stp_cnt += 1
-dnts['dist'] = distant_neighbors(3.0, 0.8)
+dnts['dist'] = distant_neighbors(1.0, 0.8)
 dnts.update()
 summarize_step(stp_cnt, dnts['dist'], qm, "distance based neighbours")
 
