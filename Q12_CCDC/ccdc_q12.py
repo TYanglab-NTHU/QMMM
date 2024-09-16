@@ -1306,7 +1306,7 @@ summarize_step(stp_cnt, dnts['close'], qm, "direct neighbours")
 
 # additional search based on distance, use the VdW radii for validity
 stp_cnt += 1
-dnts['dist'] = distant_neighbors(1.0, 0.8)
+dnts['dist'] = distant_neighbors(3.0, 0.8)
 dnts.update()
 summarize_step(stp_cnt, dnts['dist'], qm, "distance based neighbours")
 
