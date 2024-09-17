@@ -152,6 +152,7 @@
 #   I need to test the planitaty of the atom bonding planes of
 #   the capping atoms of a conjugated unit. Orthogonal planes are
 #   not conjugated!
+# - experiment with the detection of conjugated units
 
 # Load modules for Python coding
 import sys                      # IO Basics
@@ -488,6 +489,13 @@ def triad_string(trip):
 # downloads.ccdc.camd.ac.uk/documentation/API/descriptive_docs/molecule.html   #
 ################################################################################
 
+def twisted(dihedral, threshold):
+  ang = abs(dihedral)
+  if (ang >= threshold)and (ang <= 180.0-threshold):
+    return(bool(True))
+  else:
+    return(bool(False))
+
 def con_unit(mymol, at1, at2, at3):
   # No H atoms allowed
   if 1 in [at1.atomic_number, at2.atomic_number, at3.atomic_number]:
@@ -538,15 +546,41 @@ def con_unit(mymol, at1, at2, at3):
     printf(" %s", mymol.bonds[ind1].bond_type)
     printf(" %s  ", MyLabel(at2))
     printf(" %s", mymol.bonds[ind2].bond_type)
-    printf(" %s\n", MyLabel(at3))
+    printf(" %s", MyLabel(at3))
   if mymol.bonds[ind1].bond_type == 3 and mymol.bonds[ind2].bond_type == 1:
+    if VerboseFlag==2: printf("\n")
     return(-3)
   if mymol.bonds[ind1].bond_type == 2 and mymol.bonds[ind2].bond_type == 1:
-    return(-2)
+    if len(at3.neighbours)>0:
+      if VerboseFlag==2: printf("  %2i", len(at3.neighbours))
+      for pat in at3.neighbours:
+        if pat !=  at2: break
+      dihedral = obmol.GetTorsion(at1.index+1, at2.index+1, at3.index+1, pat.index+1)
+      if VerboseFlag==2:
+        printf("  %s", MyLabel(pat))
+        printf("  %f", dihedral)
+        if twisted(dihedral, 30.0): printf("  twisted")
+        else: printf("  conjugated")
+    if VerboseFlag==2: printf("\n")
+    if twisted(dihedral, 30.0): return(0)
+    else: return(-2)
   if mymol.bonds[ind1].bond_type == 1 and mymol.bonds[ind2].bond_type == 3:
+    if VerboseFlag==2: printf("\n")
     return(3)
   if mymol.bonds[ind1].bond_type == 1 and mymol.bonds[ind2].bond_type == 2:
-    return(2)
+    if len(at1.neighbours)>0:
+      if VerboseFlag==2: printf("  %2i", len(at1.neighbours))
+      for pat in at1.neighbours:
+        if pat !=  at2: break
+      dihedral = obmol.GetTorsion(pat.index+1, at1.index+1, at2.index+1, at3.index+1)
+      if VerboseFlag==2:
+        printf("  %s", MyLabel(pat))
+        printf("  %f", dihedral)
+        if twisted(dihedral, 30.0): printf("  twisted")
+        else: printf("  conjugated")
+    if VerboseFlag==2: printf("\n")
+    if twisted(dihedral, 30.0): return(0)
+    else: return(2)
   return(utype)
 
 ################################################################################

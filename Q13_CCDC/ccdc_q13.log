@@ -1,0 +1,91 @@
+Summarize command line parameter
+  VerboseFlag = 1 (default or cmd line)
+  Input File  = ../TestStructures/heme.xyz
+Clean up old files
+Process input file ../TestStructures/heme.xyz
+  process xyz input file (depreciated)
+  ../TestStructures/heme.mol2 (easier to use file format) found
+  process mol2 input file (preferred)
+  read input file directly into a CSD object
+  standarize bonds
+  build supplementary OpenBabel object from mol2 file
+  compare the molecular geometries of both objects
+    the number of atoms 162 in both objects match
+    compare geometries line by line ...
+    the geometries of both objects match
+Search for functional groups
+  No [CX2]#N group(s) found.
+  Found 2 [CX3](=O)[O] group(s) in the molecule.
+     0  C-61    O-63    O-62  
+     1  C-91    O-92    O-93  
+  No [CX3](=O)[H] group(s) found.
+  No [cX3][F,Cl,Br,I] group(s) found.
+  Found 4 [#6X3](=O)-[#7X3](-H)~[cX3] group(s) in the molecule.
+     0  C-45    O-46    N-43    H-44    C-42  
+     1  C-76    O-77    N-74    H-75    C-73  
+     2  C-106   O-107   N-104   H-105   C-103 
+     3  C-134   O-135   N-132   H-133   C-131 
+  No [#6X3](~O)~[#6X3]~[#6X3](~O) group(s) found.
+  Found 4 [#6X3](=O)[#7X3](~H) group(s) in the molecule.
+     0  C-45    O-46    N-43    H-44  
+     1  C-76    O-77    N-74    H-75  
+     2  C-106   O-107   N-104   H-105 
+     3  C-134   O-135   N-132   H-133 
+  No [#7X2]~[#7X2]~[#7X1] group(s) found.
+  10 functional group(s) found.
+Start the actual QM/MM partioning process
+Step 01 - metal center
+  1 new atoms found
+  Write stp01.xyz
+Step 02 - direct neighbours
+  6 new atoms found
+  Write stp02.xyz
+Step 03 - distance based neighbours
+  0 new atoms found
+  Write stp03.xyz
+Step 04 - rings containing neighbours atoms
+  21 new atoms found
+  Write stp04.xyz
+Step 05 - inner aromatic rings
+  0 new atoms found
+  Write stp05.xyz
+
+Entering search loop
+Step 06 - conjugated chains
+  6 new atoms found
+  Write stp06.xyz
+Step 07 - iterative search for aromatic rings
+  0 new atoms found
+  Write stp07.xyz
+Step 08 - iterative search for aromatic rings
+  0 new atoms found
+  Write stp08.xyz
+Round 1:   6 new atoms
+
+Step 09 - conjugated chains
+  0 new atoms found
+  Write stp09.xyz
+Step 10 - iterative search for aromatic rings
+  0 new atoms found
+  Write stp10.xyz
+Step 11 - iterative search for aromatic rings
+  0 new atoms found
+  Write stp11.xyz
+Round 2:  no new atoms
+Leaving search loop
+
+Step 12 - 1 atom links
+  0 new atoms found
+  Write stp12.xyz
+Step 13 - 2 atom links
+  0 new atoms found
+  Write stp13.xyz
+Step 14 - H atoms
+  12 new atoms found
+  Write stp14.xyz
+Step 15 - only MM atoms
+  116 new atoms found
+  Write stp15.xyz
+Combined output:
+  QM atoms: 46
+  MM atoms: 116
