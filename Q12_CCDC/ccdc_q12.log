@@ -49,21 +49,35 @@ Step 06 - conjugated chains
 Step 07 - iterative search for aromatic rings
   0 new atoms found
   Write stp07.xyz
-Round 1:  no new atoms
-Leaving search loop
-
-Step 08 - 1 atom links
-  0 new atoms found
+Step 08 - iterative search for aromatic rings
+  4 new atoms found
   Write stp08.xyz
-Step 09 - 2 atom links
+Round 1:   4 new atoms
+
+Step 09 - conjugated chains
   0 new atoms found
   Write stp09.xyz
-Step 10 - H atoms
-  16 new atoms found
+Step 10 - iterative search for aromatic rings
+  0 new atoms found
   Write stp10.xyz
-Step 11 - only MM atoms
-  8 new atoms found
+Step 11 - iterative search for aromatic rings
+  0 new atoms found
   Write stp11.xyz
+Round 2:  no new atoms
+Leaving search loop
+
+Step 12 - 1 atom links
+  0 new atoms found
+  Write stp12.xyz
+Step 13 - 2 atom links
+  0 new atoms found
+  Write stp13.xyz
+Step 14 - H atoms
+  16 new atoms found
+  Write stp14.xyz
+Step 15 - only MM atoms
+  4 new atoms found
+  Write stp15.xyz
 Combined output:
-  QM atoms: 35
-  MM atoms: 8
+  QM atoms: 39
+  MM atoms: 4
