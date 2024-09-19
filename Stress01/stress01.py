@@ -56,11 +56,18 @@ tm=["Sc", "Ti", "V" , "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn",
 tm.remove(target)
 csd_reader = io.EntryReader('CSD')
 cnt=0
+csd_cnt=0
 for entry in csd_reader:
+  # savefty break
+  if csd_cnt==5000: break
+  csd_cnt += 1
+  # using entry information to preselect
+  if not entry.has_3d_structure: continue
   if not entry.is_organometallic: continue
-  mol = entry.molecule
+  # select based on molecular information
+  mol = entry.molecule 
   # Skipping all unwanted entries
-  if len(mol.atoms) < 50: continue
+  if len(mol.atoms) < 100: continue
   if (target+"1") not in mol.formula: continue
   if any(x in mol.formula for x in tm): continue
   # Analyze survivors
@@ -70,74 +77,7 @@ for entry in csd_reader:
   printf("%4i  ", len(mol.atoms))
   printf("%s  ", mol.formula)
   printf("\n")
+  # Check break conditions
   if cnt==10: break
-exit()
-
-
-# Initialize CSD database connection
-csd_reader = io.EntryReader('CSD')
-
-# Search for entries with Fe atom and more than 100 atoms
-search = Search.Search()
-search.add_element('Fe')  # Iron atom
-
-# Set filter for sixfold coordination
-six_fold_coordination = Search.Parameters.CoordinationNumber(6)
-search.add_coordinated_by('Fe', six_fold_coordination)
-
-# Filter by number of atoms (greater than 100 atoms)
-entries_with_iron_sixfold = []
-for entry in csd_reader:
-    if entry.molecule.atom_count > 100:  # More than 100 atoms
-        # Find iron atoms and check if sixfold coordinated
-        for atom in entry.molecule.atoms:
-            if atom.atomic_symbol == 'Fe' and len(atom.neighbours) == 6:
-                entries_with_iron_sixfold.append(entry.identifier)
-                break  # No need to check further once condition is met
-
-# Output the filtered entries
-print(f'Found {len(entries_with_iron_sixfold)} entries with more than 100 atoms and sixfold coordinated iron:')
-for entry_id in entries_with_iron_sixfold:
-    print(entry_id)
-
-
-exit()
-
-
-# build a structure search by name
-text_numeric_search = TextNumericSearch()
-text_numeric_search.add_compound_name('aspirin')
-identifiers = [h.identifier for h in text_numeric_search.search()]
-identifiers = sorted(set(identifiers))
-# print(identifiers)
-
-# not all entries have a melting point
-# printf("%i Enties found\n", len(identifiers))
-# for i in range(len(identifiers)):
-#     e = csd_reader.entry(identifiers[i])
-#     printf("%3i  %-10s  %s\n", i, identifiers[i], e.melting_point)
-
-cnt = 0
-for ident in identifiers:
-  e = csd_reader.entry(ident)
-  mol = csd_reader.molecule(ident)
-  if e.melting_point and hasattr(mol.atoms[0].coordinates, "x"):
-    cnt += 1
-    fname = "entry%02i.mol2" % cnt
-    printf("%12s  %-8s  %s\n", fname, e.identifier, e.chemical_name)
-    with io.MoleculeWriter(fname) as mol_writer: mol_writer.write(mol)
-    fname = "entry%02i.xyz" % cnt
-    out = open(fname, "w")
-    fprintf(out, "%s\n", len(mol.atoms))
-    fprintf(out, "%s\n", e.chemical_name)
-    for n in range(len(mol.atoms)):
-      if hasattr(mol.atoms[n].coordinates, "x"):
-        fprintf(out, "%-2s  ", mol.atoms[n].atomic_symbol)
-        fprintf(out, "%10.6f  ", mol.atoms[n].coordinates.x)
-        fprintf(out, "%10.6f  ", mol.atoms[n].coordinates.y)
-        fprintf(out, "%10.6f\n", mol.atoms[n].coordinates.z)
-    out.close()
-
-    
-    
+printf("%i CCDC entries checked\n", csd_cnt)
 exit()
