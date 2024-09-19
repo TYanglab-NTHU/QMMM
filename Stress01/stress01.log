@@ -1,14 +1,6 @@
 Base directory  : /dicos_ui_home/tlankau/QMMM/Stress01
 Res directory   : /dicos_ui_home/tlankau/QMMM/Stress01/Results
 Directory for results exists
-      1  ABAGET       112  C44 H64 Fe1 N3  
-      2  ABAGIX       115  C48 H63 Fe1 N3  
-      3  ABAKEX       128  C52 H72 Fe1 N3  
-      4  ABELUQ       120  C39 H72 Fe1 N4 Si4  
-      5  ABEMAX       102  C33 H60 Fe1 N4 Si4  
-      6  ABEWEM       104  C37 H51 Cl1 F3 Fe1 N7 O3 S1  
-      7  ABEWIQ       107  C38 H54 Cl1 Fe1 N8 O5  
-      8  ABEXOV       122  C58 H56 Fe1 N3 O1 P3  
-      9  ABOTEU       114  C43 H54 F6 Fe1 N1 O8 Sb1  
-     10  ABUFOW       114  C43 H54 F6 Fe1 N1 O8 P1  
-2317 CCDC entries checked
+      1  ABEXOV       122  C58 H56 Fe1 N3 O1 P3  
+      2  ACAKAQ       251  C66 H123 Cl7 Fe1 N12 O42  
+5000 CCDC entries checked

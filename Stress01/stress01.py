@@ -70,14 +70,29 @@ for entry in csd_reader:
   if len(mol.atoms) < 100: continue
   if (target+"1") not in mol.formula: continue
   if any(x in mol.formula for x in tm): continue
+  # testing the coordination of the metal atoms
+  skip=bool(True)
+  for at in mol.atoms:
+    if at.atomic_symbol == target:
+      koor=len(at.neighbours)
+      # printf("%s %i\n", at.atomic_symbol, koor)
+      if koor==6: skip=bool(False)
+      break
+  if skip: continue
   # Analyze survivors
   cnt+=1
   printf("%7i  ", cnt)
   printf("%-10s  ", entry.identifier)
+  fname=entry.identifier
+  fname=fname.lower()
+  fname=resdir+"/"+fname+".mol2"
   printf("%4i  ", len(mol.atoms))
   printf("%s  ", mol.formula)
   printf("\n")
+  # print(fname)
+  mol_writer = io.MoleculeWriter(fname, format="mol2")
+  mol_writer.write(mol)
   # Check break conditions
-  if cnt==10: break
+  if cnt==5: break
 printf("%i CCDC entries checked\n", csd_cnt)
 exit()
