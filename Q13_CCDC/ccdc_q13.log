@@ -1,73 +1,762 @@
 Summarize command line parameter
-  VerboseFlag = 1 (default or cmd line)
-  Input File  = ../TestStructures/chain04.xyz
+  VerboseFlag = 2
+  Input File  = ../TestStructures/chain05.xyz
+my_arg in globals
+my_arglist in globals
+argpos in globals
+argcnt in globals
+4 global variables deleted
 Clean up old files
-Process input file ../TestStructures/chain04.xyz
+ext   .xyz
+path  ../TestStructures/
+base  chain05
+Process input file ../TestStructures/chain05.xyz
   process xyz input file (depreciated)
-  ../TestStructures/chain04.mol2 (easier to use file format) found
+  ../TestStructures/chain05.mol2 (easier to use file format) found
   process mol2 input file (preferred)
   read input file directly into a CSD object
   standarize bonds
   build supplementary OpenBabel object from mol2 file
   compare the molecular geometries of both objects
-    the number of atoms 54 in both objects match
+  Number of atoms: CSD 52   OB 52
+    the number of atoms 52 in both objects match
     compare geometries line by line ...
+      0    6    6    0.000000    0.000000    0.000000
+      1    6    6    0.000000    0.000000    0.000000
+      2    1    1    0.000000    0.000000    0.000000
+      3    6    6    0.000000    0.000000    0.000000
+      4    6    6    0.000000    0.000000    0.000000
+      5    6    6    0.000000    0.000000    0.000000
+      6    8    8    0.000000    0.000000    0.000000
+      7    8    8    0.000000    0.000000    0.000000
+      8   26   26    0.000000    0.000000    0.000000
+      9    6    6    0.000000    0.000000    0.000000
+     10   17   17    0.000000    0.000000    0.000000
+     11   17   17    0.000000    0.000000    0.000000
+     12    6    6    0.000000    0.000000    0.000000
+     13    6    6    0.000000    0.000000    0.000000
+     14    6    6    0.000000    0.000000    0.000000
+     15    6    6    0.000000    0.000000    0.000000
+     16    1    1    0.000000    0.000000    0.000000
+     17    6    6    0.000000    0.000000    0.000000
+     18    6    6    0.000000    0.000000    0.000000
+     19    1    1    0.000000    0.000000    0.000000
+     20    1    1    0.000000    0.000000    0.000000
+     21    6    6    0.000000    0.000000    0.000000
+     22    1    1    0.000000    0.000000    0.000000
+     23    1    1    0.000000    0.000000    0.000000
+     24    1    1    0.000000    0.000000    0.000000
+     25    6    6    0.000000    0.000000    0.000000
+     26    1    1    0.000000    0.000000    0.000000
+     27    1    1    0.000000    0.000000    0.000000
+     28    6    6    0.000000    0.000000    0.000000
+     29    1    1    0.000000    0.000000    0.000000
+     30    1    1    0.000000    0.000000    0.000000
+     31    6    6    0.000000    0.000000    0.000000
+     32    1    1    0.000000    0.000000    0.000000
+     33    1    1    0.000000    0.000000    0.000000
+     34    6    6    0.000000    0.000000    0.000000
+     35    1    1    0.000000    0.000000    0.000000
+     36    1    1    0.000000    0.000000    0.000000
+     37    1    1    0.000000    0.000000    0.000000
+     38    6    6    0.000000    0.000000    0.000000
+     39    1    1    0.000000    0.000000    0.000000
+     40    1    1    0.000000    0.000000    0.000000
+     41    6    6    0.000000    0.000000    0.000000
+     42    6    6    0.000000    0.000000    0.000000
+     43    6    6    0.000000    0.000000    0.000000
+     44    6    6    0.000000    0.000000    0.000000
+     45    1    1    0.000000    0.000000    0.000000
+     46    6    6    0.000000    0.000000    0.000000
+     47    1    1    0.000000    0.000000    0.000000
+     48    6    6    0.000000    0.000000    0.000000
+     49    1    1    0.000000    0.000000    0.000000
+     50    1    1    0.000000    0.000000    0.000000
+     51    1    1    0.000000    0.000000    0.000000
     the geometries of both objects match
 Search for functional groups
-  Found 1 [CX2]#N group(s) in the molecule.
-     0  C-15    N-16  
-  Found 2 [CX3](=O)[O] group(s) in the molecule.
-     0  C-12    O-9     O-10  
-     1  C-17    O-18    O-19  
+  No [CX2]#N group(s) found.
+  Found 1 [CX3](=O)[O] group(s) in the molecule.
+     0  C-9     O-6     O-7   
   No [CX3](=O)[H] group(s) found.
   No [cX3][F,Cl,Br,I] group(s) found.
   No [#6X3](=O)-[#7X3](-H)~[cX3] group(s) found.
   No [#6X3](~O)~[#6X3]~[#6X3](~O) group(s) found.
   No [#6X3](=O)[#7X3](~H) group(s) found.
   No [#7X2]~[#7X2]~[#7X1] group(s) found.
-  3 functional group(s) found.
+  1 functional group(s) found.
 Start the actual QM/MM partioning process
+Variable qm in globals.
+Variable VerboseFlag in globals.
 Step 01 - metal center
   1 new atoms found
+    8  Fe    0.061000   -3.138300   -0.000000
   Write stp01.xyz
+Variable qm in globals.
+Variable dnts in globals.
+Variable VerboseFlag in globals.
 Step 02 - direct neighbours
   2 new atoms found
+   10  Cl   -0.055200   -4.597100    1.575100
+   11  Cl   -0.055200   -4.597100   -1.575200
   Write stp02.xyz
+# {len(dnts['close'])<4}, do distant neightbour search
+Variable qm in globals.
+Variable dnts in globals.
+Variable VerboseFlag in globals.
+Distant neighbour search
+  <= 3.0 A and <= 80% of the VdW radius
+  Fe8-O6  2.6510  2.8160  Passed
+  Fe8-O7  2.6708  2.8160  Passed
 Step 03 - distance based neighbours
-  0 new atoms found
+  2 new atoms found
+    6   O   -0.981700   -0.701000   -0.000000
+    7   O    1.527900   -0.906400   -0.000000
   Write stp03.xyz
+Variable qm in globals.
+Variable dnts in globals.
+Variable VerboseFlag in globals.
+Rings containing neighbours atoms
+    atom  r  s
+     O-6  4  -
+     O-7  4  -
+   Cl-10  -  -
+   Cl-11  -  -
 Step 04 - rings containing neighbours atoms
-  0 new atoms found
+  1 new atoms found
+    9   C    0.224100   -0.042900   -0.000000
   Write stp04.xyz
+Variable qm in globals.
+Variable dnts in globals.
+Variable VerboseFlag in globals.
 Step 05 - inner aromatic rings
   0 new atoms found
   Write stp05.xyz
 
 Entering search loop
+Variable qm in globals.
+Variable VerboseFlag in globals.
+Testing O-6
+Testing triad O6-C9-C0
+  ind1: 16, ind2 17
+  O-6 Double C-9   Single C-0   3  C-1  180.000000  conjugated
+  O6-C9-C0    -2
+Testing O-7
+Testing triad O7-C9-C0
+  ind1: 13, ind2 17
+  O-7 Single C-9   Single C-0Testing Fe-8
+Testing C-9
+Testing triad C9-C0-C1
+Testing triad C9-C0-C12
+Testing Cl-10
+Testing Cl-11
+Testing C-0
+Testing triad C0-C1-C3
+Testing triad C0-C12-C13
+Testing triad C0-C12-C14
+Testing O-6
+Testing O-7
+Testing Fe-8
+Testing C-9
+Testing triad C9-C0-C1
+Testing triad C9-C0-C12
+Testing Cl-10
+Testing Cl-11
 Step 06 - conjugated chains
-  0 new atoms found
+  1 new atoms found
+    0   C    0.289900    1.495700   -0.000000
   Write stp06.xyz
-Step 07 - iterative search for aromatic rings
-  0 new atoms found
+Variable qm in globals.
+Variable dnts in globals.
+Variable VerboseFlag in globals.
+Details for the iterative search for aromatic rings
+    5 atoms found in step  1
+    8 atoms found in step  2
+  2 iterative search rounds needed
+Step 07 - aromatic rings
+  9 new atoms found
+    1   C    1.532400    2.143900   -0.000000
+    3   C    1.592300    3.544000    0.000000
+   12   C   -0.892700    2.247600    0.000000
+   13   C   -2.135200    1.599400    0.000000
+   14   C   -0.832800    3.647700    0.000000
+   15   C   -3.317800    2.351300    0.000000
+   17   C   -2.015400    4.399600    0.000000
+   18   C   -3.257900    3.751400    0.000000
+   21   C    0.409700    4.295900    0.000000
   Write stp07.xyz
-Step 08 - iterative search for aromatic rings
+Variable qm in globals.
+Variable mol in globals.
+Variable VerboseFlag in globals.
+  qm      mm      bond    action
+  C-1     H-2     Single
+  C-3     C-4     Single
+  C-13    H-16    Single
+  C-15    H-19    Single
+  C-17    H-20    Single
+  C-18    C-25    Single
+  C-21    H-22    Single
+Step 08 - exo double bonds
   0 new atoms found
   Write stp08.xyz
-Round 1:  no new atoms
-Leaving search loop
-
-Step 09 - 1 atom links
+Variable qm in globals.
+Variable mol in globals.
+Variable obmol in globals.
+Variable VerboseFlag in globals.
+  C-3   Single  C-4    0  plan  -0.0  planar 
+  C-18  Single  C-25   0  not
+Step 09 - sigma bonds to Lewis bases
   0 new atoms found
   Write stp09.xyz
-Step 10 - 2 atom links
-  0 new atoms found
+Round 1:  10 new atoms
+
+Variable qm in globals.
+Variable VerboseFlag in globals.
+Testing C-0
+Testing C-1
+Testing triad C1-C3-C4
+Testing C-3
+Testing triad C3-C4-C5
+  ind1: 26, ind2 20
+  C-3 Single C-4   Double C-5   3  C-1  -0.000000  conjugated
+  C3-C4-C5     2
+Testing O-6
+Testing O-7
+Testing Fe-8
+Testing C-9
+Testing Cl-10
+Testing Cl-11
+Testing C-12
+Testing C-13
+Testing C-14
+Testing C-15
+Testing triad C15-C18-C25
+Testing C-17
+Testing triad C17-C18-C25
+Testing C-18
+Testing triad C18-C25-C28
+Testing C-21
+Testing triad C21-C3-C4
+Testing C-0
+Testing C-1
+Testing C-3
+Testing C-4
+Testing triad C4-C5-C38
+Testing C-5
+Testing triad C5-C38-C41
+Testing O-6
+Testing O-7
+Testing Fe-8
+Testing C-9
+Testing Cl-10
+Testing Cl-11
+Testing C-12
+Testing C-13
+Testing C-14
+Testing C-15
+Testing triad C15-C18-C25
+Testing C-17
+Testing triad C17-C18-C25
+Testing C-18
+Testing triad C18-C25-C28
+Testing C-21
+Step 10 - conjugated chains
+  2 new atoms found
+    4   C    2.957600    4.256300    0.000000
+    5   C    4.101200    3.529200   -0.000000
   Write stp10.xyz
-Step 11 - H atoms
+Variable qm in globals.
+Variable dnts in globals.
+Variable VerboseFlag in globals.
+Details for the iterative search for aromatic rings
+  0 iterative search rounds needed
+Step 11 - aromatic rings
   0 new atoms found
   Write stp11.xyz
-Step 12 - only MM atoms
-  51 new atoms found
+Variable qm in globals.
+Variable mol in globals.
+Variable VerboseFlag in globals.
+  qm      mm      bond    action
+  C-1     H-2     Single
+  C-4     H-24    Single
+  C-5     H-23    Single
+  C-5     C-38    Single
+  C-13    H-16    Single
+  C-15    H-19    Single
+  C-17    H-20    Single
+  C-18    C-25    Single
+  C-21    H-22    Single
+Step 12 - exo double bonds
+  0 new atoms found
   Write stp12.xyz
+Variable qm in globals.
+Variable mol in globals.
+Variable obmol in globals.
+Variable VerboseFlag in globals.
+  C-5   Single  C-38   0  not
+  C-18  Single  C-25   0  not
+Step 13 - sigma bonds to Lewis bases
+  0 new atoms found
+  Write stp13.xyz
+Round 2:   2 new atoms
+
+Variable qm in globals.
+Variable VerboseFlag in globals.
+Testing C-0
+Testing C-1
+Testing C-3
+Testing C-4
+Testing triad C4-C5-C38
+Testing C-5
+Testing triad C5-C38-C41
+Testing O-6
+Testing O-7
+Testing Fe-8
+Testing C-9
+Testing Cl-10
+Testing Cl-11
+Testing C-12
+Testing C-13
+Testing C-14
+Testing C-15
+Testing triad C15-C18-C25
+Testing C-17
+Testing triad C17-C18-C25
+Testing C-18
+Testing triad C18-C25-C28
+Testing C-21
+Step 14 - conjugated chains
+  0 new atoms found
+  Write stp14.xyz
+Variable qm in globals.
+Variable dnts in globals.
+Variable VerboseFlag in globals.
+Details for the iterative search for aromatic rings
+  0 iterative search rounds needed
+Step 15 - aromatic rings
+  0 new atoms found
+  Write stp15.xyz
+Variable qm in globals.
+Variable mol in globals.
+Variable VerboseFlag in globals.
+  qm      mm      bond    action
+  C-1     H-2     Single
+  C-4     H-24    Single
+  C-5     H-23    Single
+  C-5     C-38    Single
+  C-13    H-16    Single
+  C-15    H-19    Single
+  C-17    H-20    Single
+  C-18    C-25    Single
+  C-21    H-22    Single
+Step 16 - exo double bonds
+  0 new atoms found
+  Write stp16.xyz
+Variable qm in globals.
+Variable mol in globals.
+Variable obmol in globals.
+Variable VerboseFlag in globals.
+  C-5   Single  C-38   0  not
+  C-18  Single  C-25   0  not
+Step 17 - sigma bonds to Lewis bases
+  0 new atoms found
+  Write stp17.xyz
+Round 3:  no new atoms
+Leaving search loop
+
+Variable qm in globals.
+Variable VerboseFlag in globals.
+List of all found 1-atom links
+Step 18 - 1 atom links
+  0 new atoms found
+  Write stp18.xyz
+Variable qm in globals.
+Variable VerboseFlag in globals.
+List of all found 2-atom links
+  C0-C1-C0-C1  Del
+  C0-C1-C0-C9  Del
+  C0-C1-C0-C12  Del
+  C0-C1-H2-C1  Del
+  C0-C1-C3-C1  Del
+  C0-C1-C3-C4  Del
+  C0-C1-C3-C21  Del
+  C0-C9-C0-C1  Del
+  C0-C9-C0-C9  Del
+  C0-C9-C0-C12  Del
+  C0-C9-O6-Fe8  Del
+  C0-C9-O6-C9  Del
+  C0-C9-O7-Fe8  Del
+  C0-C9-O7-C9  Del
+  C0-C12-C0-C1  Del
+  C0-C12-C0-C9  Del
+  C0-C12-C0-C12  Del
+  C0-C12-C13-C12  Del
+  C0-C12-C13-C15  Del
+  C0-C12-C13-H16  Del
+  C0-C12-C14-C12  Del
+  C0-C12-C14-C17  Del
+  C0-C12-C14-C21  Del
+  C1-C0-C1-C0  Del
+  C1-C0-C1-H2  Del
+  C1-C0-C1-C3  Del
+  C1-C0-C9-C0  Del
+  C1-C0-C9-O6  Del
+  C1-C0-C9-O7  Del
+  C1-C0-C12-C0  Del
+  C1-C0-C12-C13  Del
+  C1-C0-C12-C14  Del
+  C1-H2-C1-C0  Del
+  C1-H2-C1-H2  Del
+  C1-H2-C1-C3  Del
+  C1-C3-C1-C0  Del
+  C1-C3-C1-H2  Del
+  C1-C3-C1-C3  Del
+  C1-C3-C4-C3  Del
+  C1-C3-C4-C5  Del
+  C1-C3-C4-H24  Del
+  C1-C3-C21-C3  Del
+  C1-C3-C21-C14  Del
+  C1-C3-C21-H22  Del
+  C3-C1-C0-C1  Del
+  C3-C1-C0-C9  Del
+  C3-C1-C0-C12  Del
+  C3-C1-H2-C1  Del
+  C3-C1-C3-C1  Del
+  C3-C1-C3-C4  Del
+  C3-C1-C3-C21  Del
+  C3-C4-C3-C1  Del
+  C3-C4-C3-C4  Del
+  C3-C4-C3-C21  Del
+  C3-C4-C5-C4  Del
+  C3-C4-C5-H23  Del
+  C3-C4-C5-C38  Del
+  C3-C4-H24-C4  Del
+  C3-C21-C3-C1  Del
+  C3-C21-C3-C4  Del
+  C3-C21-C3-C21  Del
+  C3-C21-C14-C12  Del
+  C3-C21-C14-C17  Del
+  C3-C21-C14-C21  Del
+  C3-C21-H22-C21  Del
+  C4-C3-C1-C0  Del
+  C4-C3-C1-H2  Del
+  C4-C3-C1-C3  Del
+  C4-C3-C4-C3  Del
+  C4-C3-C4-C5  Del
+  C4-C3-C4-H24  Del
+  C4-C3-C21-C3  Del
+  C4-C3-C21-C14  Del
+  C4-C3-C21-H22  Del
+  C4-C5-C4-C3  Del
+  C4-C5-C4-C5  Del
+  C4-C5-C4-H24  Del
+  C4-C5-H23-C5  Del
+  C4-C5-C38-C5  Del
+  C4-C5-C38-H39  Del
+  C4-C5-C38-H40  Del
+  C4-C5-C38-C41  Del
+  C4-H24-C4-C3  Del
+  C4-H24-C4-C5  Del
+  C4-H24-C4-H24  Del
+  C5-C4-C3-C1  Del
+  C5-C4-C3-C4  Del
+  C5-C4-C3-C21  Del
+  C5-C4-C5-C4  Del
+  C5-C4-C5-H23  Del
+  C5-C4-C5-C38  Del
+  C5-C4-H24-C4  Del
+  C5-H23-C5-C4  Del
+  C5-H23-C5-H23  Del
+  C5-H23-C5-C38  Del
+  C5-C38-C5-C4  Del
+  C5-C38-C5-H23  Del
+  C5-C38-C5-C38  Del
+  C5-C38-H39-C38  Del
+  C5-C38-H40-C38  Del
+  C5-C38-C41-C38  Del
+  C5-C38-C41-C42  Del
+  C5-C38-C41-C43  Del
+  O6-Fe8-O6-Fe8  Del
+  O6-Fe8-O6-C9  Del
+  O6-Fe8-O7-Fe8  Del
+  O6-Fe8-O7-C9  Del
+  O6-Fe8-Cl10-Fe8  Del
+  O6-Fe8-Cl11-Fe8  Del
+  O6-C9-C0-C1  Del
+  O6-C9-C0-C9  Del
+  O6-C9-C0-C12  Del
+  O6-C9-O6-Fe8  Del
+  O6-C9-O6-C9  Del
+  O6-C9-O7-Fe8  Del
+  O6-C9-O7-C9  Del
+  O7-Fe8-O6-Fe8  Del
+  O7-Fe8-O6-C9  Del
+  O7-Fe8-O7-Fe8  Del
+  O7-Fe8-O7-C9  Del
+  O7-Fe8-Cl10-Fe8  Del
+  O7-Fe8-Cl11-Fe8  Del
+  O7-C9-C0-C1  Del
+  O7-C9-C0-C9  Del
+  O7-C9-C0-C12  Del
+  O7-C9-O6-Fe8  Del
+  O7-C9-O6-C9  Del
+  O7-C9-O7-Fe8  Del
+  O7-C9-O7-C9  Del
+  Fe8-O6-Fe8-O6  Del
+  Fe8-O6-Fe8-O7  Del
+  Fe8-O6-Fe8-Cl10  Del
+  Fe8-O6-Fe8-Cl11  Del
+  Fe8-O6-C9-C0  Del
+  Fe8-O6-C9-O6  Del
+  Fe8-O6-C9-O7  Del
+  Fe8-O7-Fe8-O6  Del
+  Fe8-O7-Fe8-O7  Del
+  Fe8-O7-Fe8-Cl10  Del
+  Fe8-O7-Fe8-Cl11  Del
+  Fe8-O7-C9-C0  Del
+  Fe8-O7-C9-O6  Del
+  Fe8-O7-C9-O7  Del
+  Fe8-Cl10-Fe8-O6  Del
+  Fe8-Cl10-Fe8-O7  Del
+  Fe8-Cl10-Fe8-Cl10  Del
+  Fe8-Cl10-Fe8-Cl11  Del
+  Fe8-Cl11-Fe8-O6  Del
+  Fe8-Cl11-Fe8-O7  Del
+  Fe8-Cl11-Fe8-Cl10  Del
+  Fe8-Cl11-Fe8-Cl11  Del
+  C9-C0-C1-C0  Del
+  C9-C0-C1-H2  Del
+  C9-C0-C1-C3  Del
+  C9-C0-C9-C0  Del
+  C9-C0-C9-O6  Del
+  C9-C0-C9-O7  Del
+  C9-C0-C12-C0  Del
+  C9-C0-C12-C13  Del
+  C9-C0-C12-C14  Del
+  C9-O6-Fe8-O6  Del
+  C9-O6-Fe8-O7  Del
+  C9-O6-Fe8-Cl10  Del
+  C9-O6-Fe8-Cl11  Del
+  C9-O6-C9-C0  Del
+  C9-O6-C9-O6  Del
+  C9-O6-C9-O7  Del
+  C9-O7-Fe8-O6  Del
+  C9-O7-Fe8-O7  Del
+  C9-O7-Fe8-Cl10  Del
+  C9-O7-Fe8-Cl11  Del
+  C9-O7-C9-C0  Del
+  C9-O7-C9-O6  Del
+  C9-O7-C9-O7  Del
+  Cl10-Fe8-O6-Fe8  Del
+  Cl10-Fe8-O6-C9  Del
+  Cl10-Fe8-O7-Fe8  Del
+  Cl10-Fe8-O7-C9  Del
+  Cl10-Fe8-Cl10-Fe8  Del
+  Cl10-Fe8-Cl11-Fe8  Del
+  Cl11-Fe8-O6-Fe8  Del
+  Cl11-Fe8-O6-C9  Del
+  Cl11-Fe8-O7-Fe8  Del
+  Cl11-Fe8-O7-C9  Del
+  Cl11-Fe8-Cl10-Fe8  Del
+  Cl11-Fe8-Cl11-Fe8  Del
+  C12-C0-C1-C0  Del
+  C12-C0-C1-H2  Del
+  C12-C0-C1-C3  Del
+  C12-C0-C9-C0  Del
+  C12-C0-C9-O6  Del
+  C12-C0-C9-O7  Del
+  C12-C0-C12-C0  Del
+  C12-C0-C12-C13  Del
+  C12-C0-C12-C14  Del
+  C12-C13-C12-C0  Del
+  C12-C13-C12-C13  Del
+  C12-C13-C12-C14  Del
+  C12-C13-C15-C13  Del
+  C12-C13-C15-C18  Del
+  C12-C13-C15-H19  Del
+  C12-C13-H16-C13  Del
+  C12-C14-C12-C0  Del
+  C12-C14-C12-C13  Del
+  C12-C14-C12-C14  Del
+  C12-C14-C17-C14  Del
+  C12-C14-C17-C18  Del
+  C12-C14-C17-H20  Del
+  C12-C14-C21-C3  Del
+  C12-C14-C21-C14  Del
+  C12-C14-C21-H22  Del
+  C13-C12-C0-C1  Del
+  C13-C12-C0-C9  Del
+  C13-C12-C0-C12  Del
+  C13-C12-C13-C12  Del
+  C13-C12-C13-C15  Del
+  C13-C12-C13-H16  Del
+  C13-C12-C14-C12  Del
+  C13-C12-C14-C17  Del
+  C13-C12-C14-C21  Del
+  C13-C15-C13-C12  Del
+  C13-C15-C13-C15  Del
+  C13-C15-C13-H16  Del
+  C13-C15-C18-C15  Del
+  C13-C15-C18-C17  Del
+  C13-C15-C18-C25  Del
+  C13-C15-H19-C15  Del
+  C13-H16-C13-C12  Del
+  C13-H16-C13-C15  Del
+  C13-H16-C13-H16  Del
+  C14-C12-C0-C1  Del
+  C14-C12-C0-C9  Del
+  C14-C12-C0-C12  Del
+  C14-C12-C13-C12  Del
+  C14-C12-C13-C15  Del
+  C14-C12-C13-H16  Del
+  C14-C12-C14-C12  Del
+  C14-C12-C14-C17  Del
+  C14-C12-C14-C21  Del
+  C14-C17-C14-C12  Del
+  C14-C17-C14-C17  Del
+  C14-C17-C14-C21  Del
+  C14-C17-C18-C15  Del
+  C14-C17-C18-C17  Del
+  C14-C17-C18-C25  Del
+  C14-C17-H20-C17  Del
+  C14-C21-C3-C1  Del
+  C14-C21-C3-C4  Del
+  C14-C21-C3-C21  Del
+  C14-C21-C14-C12  Del
+  C14-C21-C14-C17  Del
+  C14-C21-C14-C21  Del
+  C14-C21-H22-C21  Del
+  C15-C13-C12-C0  Del
+  C15-C13-C12-C13  Del
+  C15-C13-C12-C14  Del
+  C15-C13-C15-C13  Del
+  C15-C13-C15-C18  Del
+  C15-C13-C15-H19  Del
+  C15-C13-H16-C13  Del
+  C15-C18-C15-C13  Del
+  C15-C18-C15-C18  Del
+  C15-C18-C15-H19  Del
+  C15-C18-C17-C14  Del
+  C15-C18-C17-C18  Del
+  C15-C18-C17-H20  Del
+  C15-C18-C25-C18  Del
+  C15-C18-C25-H26  Del
+  C15-C18-C25-H27  Del
+  C15-C18-C25-C28  Del
+  C15-H19-C15-C13  Del
+  C15-H19-C15-C18  Del
+  C15-H19-C15-H19  Del
+  C17-C14-C12-C0  Del
+  C17-C14-C12-C13  Del
+  C17-C14-C12-C14  Del
+  C17-C14-C17-C14  Del
+  C17-C14-C17-C18  Del
+  C17-C14-C17-H20  Del
+  C17-C14-C21-C3  Del
+  C17-C14-C21-C14  Del
+  C17-C14-C21-H22  Del
+  C17-C18-C15-C13  Del
+  C17-C18-C15-C18  Del
+  C17-C18-C15-H19  Del
+  C17-C18-C17-C14  Del
+  C17-C18-C17-C18  Del
+  C17-C18-C17-H20  Del
+  C17-C18-C25-C18  Del
+  C17-C18-C25-H26  Del
+  C17-C18-C25-H27  Del
+  C17-C18-C25-C28  Del
+  C17-H20-C17-C14  Del
+  C17-H20-C17-C18  Del
+  C17-H20-C17-H20  Del
+  C18-C15-C13-C12  Del
+  C18-C15-C13-C15  Del
+  C18-C15-C13-H16  Del
+  C18-C15-C18-C15  Del
+  C18-C15-C18-C17  Del
+  C18-C15-C18-C25  Del
+  C18-C15-H19-C15  Del
+  C18-C17-C14-C12  Del
+  C18-C17-C14-C17  Del
+  C18-C17-C14-C21  Del
+  C18-C17-C18-C15  Del
+  C18-C17-C18-C17  Del
+  C18-C17-C18-C25  Del
+  C18-C17-H20-C17  Del
+  C18-C25-C18-C15  Del
+  C18-C25-C18-C17  Del
+  C18-C25-C18-C25  Del
+  C18-C25-H26-C25  Del
+  C18-C25-H27-C25  Del
+  C18-C25-C28-C25  Del
+  C18-C25-C28-H29  Del
+  C18-C25-C28-H30  Del
+  C18-C25-C28-C31  Del
+  C21-C3-C1-C0  Del
+  C21-C3-C1-H2  Del
+  C21-C3-C1-C3  Del
+  C21-C3-C4-C3  Del
+  C21-C3-C4-C5  Del
+  C21-C3-C4-H24  Del
+  C21-C3-C21-C3  Del
+  C21-C3-C21-C14  Del
+  C21-C3-C21-H22  Del
+  C21-C14-C12-C0  Del
+  C21-C14-C12-C13  Del
+  C21-C14-C12-C14  Del
+  C21-C14-C17-C14  Del
+  C21-C14-C17-C18  Del
+  C21-C14-C17-H20  Del
+  C21-C14-C21-C3  Del
+  C21-C14-C21-C14  Del
+  C21-C14-C21-H22  Del
+  C21-H22-C21-C3  Del
+  C21-H22-C21-C14  Del
+  C21-H22-C21-H22  Del
+Step 19 - 2 atom links
+  0 new atoms found
+  Write stp19.xyz
+Variable qm in globals.
+Variable VerboseFlag in globals.
+Step 20 - H atoms
+  7 new atoms found
+    2   H    2.435300    1.569800   -0.000000
+   16   H   -2.180900    0.530300   -0.000000
+   19   H   -4.266400    1.856300    0.000000
+   20   H   -1.969700    5.468600    0.000000
+   22   H    0.455400    5.364900    0.000000
+   23   H    4.055500    2.460200   -0.000000
+   24   H    3.003300    5.325300    0.000000
+  Write stp20.xyz
+Step 21 - only MM atoms
+  27 new atoms found
+   25   C   -4.557500    4.577700    0.000000
+   26   H   -4.587800    5.194700   -0.873600
+   27   H   -5.399700    3.917700   -0.000000
+   28   C   -4.601200    5.465600    1.257500
+   29   H   -3.933000    6.292200    1.133800
+   30   H   -4.304200    4.891400    2.110100
+   31   C   -6.033900    5.990400    1.465800
+   32   H   -6.370300    6.473400    0.572200
+   33   H   -6.683800    5.171900    1.695000
+   34   C   -6.047300    6.998200    2.630200
+   35   H   -5.401500    7.819300    2.398700
+   36   H   -7.043700    7.358900    2.778300
+   37   H   -5.706000    6.516600    3.522600
+   38   C    5.466600    4.241500   -0.000000
+   39   H    5.546500    4.859400   -0.869900
+   40   H    5.552500    4.848000    0.877300
+   41   C    6.593300    3.191700   -0.010700
+   42   C    7.111300    2.712100    1.192700
+   43   C    7.095900    2.720300   -1.223400
+   44   C    8.132000    1.761800    1.183200
+   45   H    6.715400    3.084600    2.148600
+   46   C    8.116300    1.768900   -1.233000
+   47   H    6.687600    3.098000   -2.172000
+   48   C    8.634500    1.289700   -0.030000
+   49   H    8.540800    1.384200    2.131700
+   50   H    8.512000    1.397100   -2.189400
+   51   H    9.439300    0.540400   -0.037200
+  Write stp21.xyz
 Combined output:
-  QM atoms: 3
-  MM atoms: 51
+  QM atoms: 25
+  MM atoms: 27

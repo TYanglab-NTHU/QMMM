@@ -153,6 +153,14 @@
 #   the capping atoms of a conjugated unit. Orthogonal planes are
 #   not conjugated!
 # - experiment with the detection of conjugated units
+# 18.09.2024
+# - The search for distant neighbours is only done if less than
+#   4 ligands have been found.
+# 19.10.2024
+# - Planarity test added for conjugated 3 atom units
+# - Function added to test for trigonal planar coordination
+# - Function to test sigma bonds to Lewis bases added
+# - Test for twisted bonds added to the sigma bond added
 
 # Load modules for Python coding
 import sys                      # IO Basics
@@ -491,7 +499,7 @@ def triad_string(trip):
 
 def twisted(dihedral, threshold):
   ang = abs(dihedral)
-  if (ang >= threshold)and (ang <= 180.0-threshold):
+  if (ang >= threshold) and (ang <= 180.0-threshold):
     return(bool(True))
   else:
     return(bool(False))
@@ -817,6 +825,115 @@ def grow_aromatic_rings():
 
 ################################################################################
 # functions to to help with the QM/MM separation                               #
+# looking for a single bond connected to an atom with a lone pair              #
+# input   none                                                                 #
+# output  new_atoms    new atoms found and added to the QM core                #
+# globals VerboseFlag  int to controll the verbosity of the output             #
+#         qm           list with all atoms in the quantum core                 #
+#         dnts         dictionary holding intermediate results                 #
+################################################################################
+
+def my_trig_plan(at):
+  if 'obmol' not in globals():
+    print("Function 'my_trig_plan': 'obmol' not in globals")
+    exit()
+  if len(at.neighbours) != 3:
+    return(bool(False))
+  n1 = at.neighbours[0]
+  n2 = at.neighbours[1]
+  n3 = at.neighbours[2]
+  dihedral = obmol.GetTorsion(n1.index+1, n2.index+1, at.index+1, n3.index+1)
+  if (dihedral>= -10.0) and (dihedral<=  10.0):
+    return(bool(True))
+  if (dihedral>=-190.0) and (dihedral<=-170.0):
+    return(bool(True))
+  if (dihedral>= 170.0) and (dihedral<= 190.0):
+    return(bool(True))
+  return(bool(False))
+  
+def lp_num(at):
+  ve_dic= { 1: 1,                                            2: 2,
+            3: 1,  4: 2,  5: 3,  6: 4,  7: 5,  8: 6,  9: 7, 10: 8,
+           11: 1, 12: 2, 13: 3, 14: 4, 15: 5, 16: 6, 17: 7, 18: 8,
+           19: 1, 20: 2, 31: 3, 32: 4, 33: 5, 34: 6, 35: 7, 36: 8,
+           37: 1, 38: 2, 49: 3, 50: 4, 51: 5, 52: 6, 53: 7, 54: 8,
+           55: 1, 56: 2, 81: 3, 82: 4, 83: 5}
+  if at.atomic_number not in ve_dic:
+    print("Function 'lp_mum' called for an atom not defined in 've_dic'.")
+    exit()
+  lp = 0
+  elec = ve_dic[at.atomic_number]
+  formal = at.formal_charge
+  bond=0
+  for na in at.neighbours:
+    bidx = InMolBonds(mol, at.index, na.index)
+    btype = mol.bonds[bidx].bond_type
+    # print(na, btype)
+    if btype=="Single":    bond = bond+1
+    if btype=="Double":    bond = bond+2
+    if btype=="Triple":    bond = bond+3
+    if btype=="Quadruple": bond = bond+4
+    if btype=="Aromatic":  bond = bond+1.5
+  lp = (elec-formal-bond)/2.0  
+  return(lp)
+
+def lp_check():
+  # are the necessary global variables defined?
+  gvar_list = ["qm", "mol", "obmol", "VerboseFlag"]
+  for gvar in gvar_list:
+    if gvar not in globals():
+      printf("Variable %s NOT in globals.\n", gvar)
+      exit()
+    elif VerboseFlag==2: printf("Variable %s in globals.\n", gvar)
+  global qm, dnts
+  # the actual search
+  results = []
+  
+  new_atoms = []
+  for qa in qm:
+    for na in qa.neighbours:
+      dihedral = 999
+      if na in qm: continue
+      if na.atomic_number==1: continue
+      bidx = InMolBonds(mol, qa.index, na.index)
+      btype = mol.bonds[bidx].bond_type
+      if btype == "Single":
+        lp = lp_num(na)
+        if my_trig_plan(qa) and my_trig_plan(na):
+          for qn in qa.neighbours:
+            if qn != na: break
+          for nn in na.neighbours:
+            if nn != qa: break
+          dihedral = obmol.GetTorsion(qn.index+1, qa.index+1, na.index+1, nn.index+1)
+        if VerboseFlag==2:
+          printf("  %-4s", MyLabel(qa))
+          printf("  %s", btype)
+          printf("  %-5s", MyLabel(na))
+          printf("  %i", lp)
+          if my_trig_plan(na): printf("  plan")
+          else: printf("  not")
+          if my_trig_plan(qa) and my_trig_plan(na):
+            printf("  %.1f", dihedral)
+            if twisted(dihedral, 30.0): printf("  twisted")
+            else: printf("  planar ")
+          printf("\n")
+        if lp>0:
+          if dihedral != 999:
+            if twisted(dihedral, 30.0):
+              continue
+            else:
+              new_atoms.append(na)
+          else:
+            new_atoms.append(na)
+  new_atoms = my_clean_list(new_atoms)
+  qm += new_atoms
+  qm += my_clean_list(qm)
+  results += new_atoms
+
+  return(results)
+
+################################################################################
+# functions to to help with the QM/MM separation                               #
 # looking for double bonds exo to the quantum core                             #
 # input   none                                                                 #
 # output  new_atoms    new atoms found and added to the QM core                #
@@ -837,7 +954,7 @@ def double_check():
   # the actual search
   results = []
   while bool(True):
-    new_atoms = []  # empty list for serach results
+    new_atoms = []  # empty list for search results
     if VerboseFlag==2:
       print("  qm      mm      bond    action")
     for qa in qm: # loop over quantum core
@@ -884,7 +1001,7 @@ def inner_aromatic_rings():
     elif VerboseFlag==2: printf("Variable %s in globals.\n", gvar)
   global qm, dnts
   # the actual search
-  new_atoms = []  # empty list for serach results
+  new_atoms = []  # empty list for search results
   # create an intermediate test list for atoms to be tested
   itl = dnts['close'] + dnts['dist'] + dnts['nrings']
   itl = my_clean_list(itl)
@@ -1361,7 +1478,7 @@ for file in glob.glob("stp*xyz"):
 if os.path.exists("./combi.xyz"): os.remove("./combi.xyz")
 
 ################################################################################
-# split the command line argument for the input file                           #
+# read the input file and create mol (CSD) and obmol (OpenBabel)                         #
 ################################################################################
 
 mol, obmol = read_input_file(inp_name)
@@ -1369,7 +1486,6 @@ mol, obmol = read_input_file(inp_name)
 ################################################################################
 # identify functional groups                                                   #
 ################################################################################
-
 
 # list of smart strings for the search of functional groups
 # later rewrite this code to read the smarts form file
@@ -1407,7 +1523,14 @@ summarize_step(stp_cnt, dnts['close'], qm, "direct neighbours")
 
 # additional search based on distance, use the VdW radii for validity
 stp_cnt += 1
-dnts['dist'] = distant_neighbors(1.0, 0.8)
+if len(dnts['close']) < 4:
+  if VerboseFlag>0:
+    printf("# {len(dnts['close'])<4}, do distant neightbour search\n")
+  dnts['dist'] = distant_neighbors(3.0, 0.8)
+else:
+  if VerboseFlag>0:
+    printf("# {len(dnts['close'])>=4}, skip distant neightbour search\n")
+  dnts['dist'] = []
 dnts.update()
 summarize_step(stp_cnt, dnts['dist'], qm, "distance based neighbours")
 
@@ -1427,10 +1550,12 @@ printf("\nEntering search loop\n")
 dnts['conju']   = []
 dnts['gArings'] = []
 dnts['dBonds'] = []
+dnts['lpBonds'] = []
 dnts.update()
 hc = []  # help/intermediate variable for conjugated chains
 ha = []  # help/intermediate variable for aromatic rings
 hd = []  # help/intermediate variable for exo double bonds from the QM core
+hl = []  # help/intermediate variable for sigma bonds to atoms with lone pairs
 cnt = 0
 while bool(True):
   cnt+=1
@@ -1448,14 +1573,21 @@ while bool(True):
   num_new_at += len(ha)
   dnts['gArings'] += ha
   dnts.update()
-  summarize_step(stp_cnt, ha, qm, "iterative search for aromatic rings")
+  summarize_step(stp_cnt, ha, qm, "aromatic rings")
   # check for exo-double bonds
   stp_cnt   += 1
   hd = double_check()
   num_new_at += len(hd)
   dnts['dBonds'] += hd
   dnts.update()
-  summarize_step(stp_cnt, hd, qm, "iterative search for aromatic rings")
+  summarize_step(stp_cnt, hd, qm, "exo double bonds")
+  # check for sigma bonds to ligands with lone pairs
+  stp_cnt   += 1
+  hl = lp_check()
+  num_new_at += len(hl)
+  dnts['lpBonds'] += hl
+  dnts.update()
+  summarize_step(stp_cnt, hl, qm, "sigma bonds to Lewis bases")
   # summarize results from the current round of the loop
   if num_new_at==0:
     printf("Round %i:  no new atoms\n", cnt)
