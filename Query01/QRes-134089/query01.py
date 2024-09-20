@@ -36,6 +36,12 @@ printf("%s\n",  basedir)
 printf("%-16s: ", "Res directory")
 printf("%s\n",  resdir)
 
+max_read =   10000
+max_hits = 1500000
+printf("%-16s: %7i (about 1.5 mio CCDC entries)\n", "max reads", max_read)
+printf("%-16s: %7i\n", "max hits", max_hits)
+printf("\n")
+
 if os.path.isdir(resdir):
   print("Directory for results exists")
 else:
@@ -57,19 +63,40 @@ tm.remove(target)
 csd_reader = io.EntryReader('CSD')
 cnt=0
 csd_cnt=0
+no_3d_struc = 0
+disorder = 0
+too_small = 0
+not_target = 0
+tm_metal = 0
+organo_metallic = 0
+coordination = 0
 for entry in csd_reader:
   # savefty break
-  if csd_cnt==5000: break
+  if csd_cnt==max_read: break
   csd_cnt += 1
   # using entry information to preselect
-  if not entry.has_3d_structure: continue
   if not entry.is_organometallic: continue
+  organo_metallic += 1
+  if not entry.has_3d_structure:
+    no_3d_struc += 1
+    continue
+  if entry.has_disorder:
+    disorder += 1
+    continue
+  
   # select based on molecular information
   mol = entry.molecule 
   # Skipping all unwanted entries
-  if len(mol.atoms) < 100: continue
-  if (target+"1") not in mol.formula: continue
-  if any(x in mol.formula for x in tm): continue
+  if len(mol.atoms) < 75:
+    too_small += 1
+    continue
+  if (target+"1") not in mol.formula:
+    not_target += 1
+    continue
+  if any(x in mol.formula for x in tm):
+    tm_metal += 1
+    continue
+
   # testing the coordination of the metal atoms
   skip=bool(True)
   for at in mol.atoms:
@@ -78,7 +105,10 @@ for entry in csd_reader:
       # printf("%s %i\n", at.atomic_symbol, koor)
       if koor==6: skip=bool(False)
       break
-  if skip: continue
+  if skip:
+    coordination += 1
+    continue
+
   # Analyze survivors
   cnt+=1
   printf("%7i  ", cnt)
@@ -92,7 +122,19 @@ for entry in csd_reader:
   # print(fname)
   mol_writer = io.MoleculeWriter(fname, format="mol2")
   mol_writer.write(mol)
+
   # Check break conditions
-  if cnt==5: break
-printf("%i CCDC entries checked\n", csd_cnt)
+  if cnt==max_hits: break
+
+printf("\n")
+printf("Summary of the search\n")
+printf("%10i CCDC entries checked\n", csd_cnt)
+printf("%10i organometallic entries\n", csd_cnt)
+printf("%10i skipped entries - no 3D struc\n", no_3d_struc)
+printf("%10i skipped entries - disorder\n", disorder)
+printf("%10i skipped entries - too small\n", too_small)
+printf("%10i skipped entries - no target TM ion\n", not_target)
+printf("%10i skipped entries - 2nd transition metal\n", tm_metal)
+printf("%10i skipped entries - wrong coordination\n", coordination)
+
 exit()
