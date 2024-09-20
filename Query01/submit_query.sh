@@ -51,7 +51,7 @@ then
   echo "${homedir} found -> delete old, create new"
   rm -rf ${homedir}
 else
-  echo "${workdir} NOT found -> create new"
+  echo "${homedir} NOT found -> create new"
 fi
 mv ${workdir} ${homedir}
 cd ${startdir}

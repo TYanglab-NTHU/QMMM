@@ -36,8 +36,8 @@ printf("%s\n",  basedir)
 printf("%-16s: ", "Res directory")
 printf("%s\n",  resdir)
 
-max_read =   25000
-max_hits = 1500000
+max_read = 2000000
+max_hits =    5000
 printf("%-16s: %7i (about 1.5 mio CCDC entries)\n", "max reads", max_read)
 printf("%-16s: %7i\n", "max hits", max_hits)
 printf("\n")
