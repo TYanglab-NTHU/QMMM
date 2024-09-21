@@ -1,0 +1,37 @@
+Runnig query02.py on slurm-ui03.twgrid.org
+  name base: query02
+  startdir : /dicos_ui_home/tlankau/QMMM/Query02
+  workdir  : /tmp/tlankau
+  homedir  : /dicos_ui_home/tlankau/QMMM/Query02/QRes-
+  pid      : 
+  slurm out: slurm-.out
+
+/tmp/tlankau NOT found -> create
+Copy query02.py to /tmp/tlankau
+
+21-09-2024 12:01:37 Job starts
+Base directory  : /tmp/tlankau
+Res directory   : /tmp/tlankau/Results
+max reads       : 2000000 (about 1.5 mio CCDC entries)
+max hits        :       2
+
+Directory for results does NOT exist -> Create
+      1  ACOMAG       138  C65 H47 Cl2 Fe1 N9 O14  
+      2  ACUMUH       208  C76 H86 B3 Cl12 F12 Fe1 N9 O9  
+
+Summary of the search
+      6153 CCDC entries checked
+      6153 organometallic entries
+       207 skipped entries - no 3D struc
+       974 skipped entries - disorder
+      1470 skipped entries - too small
+       554 skipped entries - no target TM ion
+         6 skipped entries - 2nd transition metal
+        10 skipped entries - wrong coordination
+21-09-2024 12:02:49 Job ends
+
+Move Results from /tmp/tlankau to /dicos_ui_home/tlankau/QMMM/Query02/QRes-
+/dicos_ui_home/tlankau/QMMM/Query02/QRes- NOT found -> create new (by mv command)
+Move /tmp/tlankau to /dicos_ui_home/tlankau/QMMM/Query02/QRes-
+Copy output from the SLURM demon to /tmp/tlankau
+Free space on \tmp and elete /tmp/tlankau
