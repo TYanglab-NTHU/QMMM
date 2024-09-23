@@ -161,6 +161,11 @@
 # - Function added to test for trigonal planar coordination
 # - Function to test sigma bonds to Lewis bases added
 # - Test for twisted bonds added to the sigma bond added
+# 23.10.2024
+# - move to ccdc_q14.py
+# - add a list of QQ/MM links to end of combi.xyz
+# - fix added to reading xyz files (limit the number of lines read)
+# - adding the QM/MM links to combi.xyz
 
 # Load modules for Python coding
 import sys                      # IO Basics
@@ -325,7 +330,7 @@ def load_xyz(name, ident):
   # create an empty molecule
   mol = Molecule(identifier=ident)
   # add atoms line by line
-  for line in lines[2:]:
+  for line in lines[2:NumAt+1]:
     parts = line.split()
     at = Atom(parts[0], coordinates=(float(parts[1]), float(parts[2]), float(parts[3])))
     mol.add_atom(at)
@@ -1628,13 +1633,29 @@ summarize_step(stp_cnt, mm, mm, "only MM atoms")
 
 # create combined output file
 combi=[]
+link_list = []
+for qat in qm:
+  for mat in qat.neighbours:
+    if mat in mm:
+      pair=[]
+      pair.append(qat)
+      pair.append(mat)
+      link_list.append(pair)
 if VerboseFlag > 0:
   printf("Combined output:\n")
-  printf("  QM atoms: %i\n", len(qm))
-  printf("  MM atoms: %i\n", len(mm))
+  printf("  QM atoms: %3i\n", len(qm))
+  printf("  MM atoms: %3i\n", len(mm))
+  printf("  Links   : %3i\n", len(link_list))
 combi = qm + mm
 fname = "combi.xyz"
-comment = "QM: %i atoms, MM: %i atoms" % (len(qm), len(mm))
+comment = "QM: %i at, MM: %i at, Links: %i" % (len(qm), len(mm), len(link_list))
 list_xyz(combi, fname, comment)
-
+# append combi.xyz
+out = open("combi.xyz", "a")
+fprintf(out, "\n")
+fprintf(out, "QM/MM links (counting starts at zero)\n")
+for pair in link_list:
+  fprintf(out, "%3i  ", combi.index(pair[0]))
+  fprintf(out, "%3i\n", combi.index(pair[1]))
+out.close()
 exit()
