@@ -99,6 +99,10 @@ if gb.VerboseFlag > 0:
 # delete variables I don't need anay more
 clean_glob_var(['my_arg', 'my_arglist', 'argpos', 'argcnt'])
 
+# turn of OpenBabel warnings for no verbose runs
+if gb.VerboseFlag==0:
+  ob.obErrorLog.SetOutputLevel(0)
+
 # clean up old files                                                           #
 if gb.VerboseFlag > 0: printf("Clean up old files\n")
 for file in glob.glob("stp*xyz"):
@@ -110,4 +114,8 @@ if os.path.exists("./combi.xyz"): os.remove("./combi.xyz")
 # read input file
 gb.mol, gb.obmol = qms.read_input_file(inp_name)
 
-# standard QM/MM separation
+# standard QM/MM separation (deviation from the old code)
+qms.std_qmmm_sep()
+
+# write output file with the QM/MM separation data
+qms.write_output_file("combi.xyz")

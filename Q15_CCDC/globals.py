@@ -25,4 +25,8 @@ def init():
   global mol, obmol
   mol   = Molecule()
   obmol = ob.OBMol()
+  global qm, mm, dnts
+  qm = []
+  mm = []
+  dnts = {}
   
