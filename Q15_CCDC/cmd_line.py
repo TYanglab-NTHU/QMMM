@@ -118,4 +118,5 @@ gb.mol, gb.obmol = qms.read_input_file(inp_name)
 qms.std_qmmm_sep()
 
 # write output file with the QM/MM separation data
-qms.write_output_file("combi.xyz")
+stats = qms.write_output_file("combi.xyz")
+print(stats)

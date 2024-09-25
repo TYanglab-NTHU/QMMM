@@ -497,12 +497,26 @@ def write_output_file(out_name):
         pair.append(qat)
         pair.append(mat)
         link_list.append(pair)
+  combi = gb.qm + gb.mm
+  tat = len(combi)
+  qat = len(gb.qm)
+  mat = len(gb.mm)
+  qel = 0
+  for at in gb.qm: qel += at.atomic_number
+  mel = 0
+  for at in gb.mm: mel += at.atomic_number
+  tel = qel + mel
+  li = len(link_list)
+  stats = [tat, qat, mat, tel, qel, mel, li]
   if gb.VerboseFlag > 0:
     printf("Combined output:\n")
-    printf("  QM atoms: %3i\n", len(gb.qm))
-    printf("  MM atoms: %3i\n", len(gb.mm))
-    printf("  Links   : %3i\n", len(link_list))
-  combi = gb.qm + gb.mm
+    printf("  All atoms     %4i\n", tat)
+    printf("  QM atoms      %4i (%4.1f%%)\n", qat, 100.0*qat/tat)
+    printf("  MM atoms      %4i (%4.1f%%)\n", mat, 100.0*mat/tat)
+    printf("  All electrons %4i (based on Znuc)\n", tel)
+    printf("  QM electrons  %4i (%4.1f%%)\n", qel, 100.0*qel/tel)
+    printf("  MM electrons  %4i (%4.1f%%)\n", mel, 100.0*mel/tel)
+    printf("  Links         %4i\n", len(link_list))
   comment = "QM: %i at, MM: %i at, Links: %i" % (len(gb.qm), len(gb.mm), len(link_list))
   list_xyz(combi, out_name, comment)
   # append xyz file with the link list
@@ -513,7 +527,7 @@ def write_output_file(out_name):
     fprintf(out, "%3i  ", combi.index(pair[0]))
     fprintf(out, "%3i\n", combi.index(pair[1]))
   out.close()
-  return()
+  return(stats)
 
 ################################################################################
 # functions for the compartimensatiom of the  QM/MM separation                 #
@@ -1112,6 +1126,11 @@ def std_qmmm_sep():
     printf("\n")
     printf("Start the actual QM/MM partioning process\n")
 
+  # start with a clean slate
+  gb.qm = []
+  gb.mm = []
+  gb.dnts = {}
+
   # find metal centers
   stp_cnt = 1
   gb.dnts['cent'] = metal_center(19) # start with potassium
@@ -1151,7 +1170,7 @@ def std_qmmm_sep():
   summarize_step(stp_cnt, gb.dnts['cArings'], gb.qm, "inner aromatic rings")
 
   # enter the loop for the coninous growth of the QM core
-  printf("\nEntering search loop\n")
+  if gb.VerboseFlag>0: printf("\nEntering search loop\n")
   gb.dnts['conju']   = []
   gb.dnts['gArings'] = []
   gb.dnts['dBonds'] = []
@@ -1195,11 +1214,11 @@ def std_qmmm_sep():
     summarize_step(stp_cnt, hl, gb.qm, "sigma bonds to Lewis bases")
     # summarize results from the current round of the loop
     if num_new_at==0:
-      printf("Round %i:  no new atoms\n", cnt)
+      if gb.VerboseFlag>0: printf("Round %i:  no new atoms\n", cnt)
       break
     else:
-      printf("Round %i:  %2i new atoms\n\n", cnt, num_new_at)
-  printf("Leaving search loop\n\n")
+      if gb.VerboseFlag>0: printf("Round %i:  %2i new atoms\n\n", cnt, num_new_at)
+  if gb.VerboseFlag>0: printf("Leaving search loop\n\n")
   del hc, ha, hd, cnt
   # leave the loop for the coninous growth of the QM core
 
