@@ -85,6 +85,8 @@ printf("%4i Bond types found\n", len(link_dict))
 sorted_dict = dict(sorted(link_dict.items(), key=lambda item: item[1], reverse=True))
 print(sorted_dict)
 
+exit()
+
 # Save the dictionary
 with open('link_dict.pkl', 'wb') as fp:
   pickle.dump(sorted_dict, fp)
