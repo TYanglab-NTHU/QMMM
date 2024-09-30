@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define basic settings
-script="stress01.py"
+script="stress02.py"
 base=`echo ${script} | rev | cut -f2- -d. | rev`
 workdir="/tmp/tlankau"
 startdir=`pwd`
